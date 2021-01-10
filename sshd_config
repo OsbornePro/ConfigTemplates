@@ -1,0 +1,248 @@
+#	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+
+# This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+# Include /etc/ssh/sshd_config.d/*.conf
+
+Port 5225
+Protocol 2
+AddressFamily inet 
+ListenAddress 0.0.0.0
+#ListenAddress ::
+
+
+# Ciphers and keying
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+# File locations to save the servers private host keys
+
+RekeyLimit default none
+# Specifies the number of times a users SSH private key can be different when signing in. If you are good about never rekeying SSH certificates this is a strong security setting to have
+# This limit also refers to the rotation of sessoin keys. The more often a session key is rotated can help prevent any kind of decryption from being performed
+
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+# Specifies the ciphers allowed for SSH protocol version 2. CBC has a flaw in its algorithm and can be decrypted. Do not use the CBC block chain.
+
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
+# Specifies the encryptions to use for key exchange. 
+# A symmetric key is required in order to start a key exchange. Keys are not actually exchanged. Public variables are combined with Private variables to create a key and begin initial secure communication
+
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+# What SSH algorithms should be used for integrity checks
+
+
+# Logging
+SyslogFacility USER 
+LogLevel INFO
+
+
+# Authentication:
+LoginGraceTime 20
+# How long in seconds after a connection request the server waits before disconnecting if a user has not successfully logged in
+
+PermitRootLogin no
+# This settings allows or prevents the root user from using SSH to sign into a machine via password or public key. Sudo users can still elevate privilege
+
+StrictModes yes
+# Specifies whether SSH should check file modes and ownership of the user's files and home directory before accepting login. This is normally desirable because novices sometimes accidentally leave their directory or files world-writable. The default is ''yes''. 
+# You may have experienced this setting before when you have needed to do chmod 600 id_rsa in order to sign into a remote machine over SSH
+
+MaxAuthTries 3 
+# Specifies the maximum number of authentication attempts permitted per connection. Once the number of failures reaches half this value, additional failures are logged. The default is 6
+
+MaxSessions 6
+# Specifies the maximum number of open sessions permitted per network connection. The default is 10. 
+
+
+PubkeyAuthentication yes
+
+# Expect .ssh/authorized_keys2 to be disregarded by default in future.
+AuthorizedKeysFile	.ssh/authorized_keys 
+# I Removed this .ssh/authorized_keys2
+
+#AuthorizedPrincipalsFile none
+#AuthorizedKeysCommand none
+#AuthorizedKeysCommandUser nobody
+
+#=================================
+# HOST BASED AUTHENTICATION
+#=================================
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+# This can be done with the command ```ssh-keyscan toborMINT | tee -a /etc/ssh/ssh_known_hosts```
+HostbasedAuthentication no
+# A setting of ''yes'' means that sshd uses the name supplied by the client rather than attempting to resolve the name from the TCP connection itself. The default is ''no''. 
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# If you use a proxy this setting is not helpful because the host keys will be the same for all connections
+
+# THE CLIENT CONFIGURATION SHOULD LIKE THIS (ssh_config)
+#Host *.pool.example.org
+#	HostbasedAuthentication yes
+#	EnableSSHKeysign yes
+#       ServerAliveCountMax 3
+#	ServerAliveInterval 60
+
+
+
+#HostbasedUsesNameFromPacketOnly yes
+# Specifies whether or not the server will attempt to perform a reverse name lookup when matching the name in the ~/.shosts, ~/.rhosts, and /etc/hosts.equiv files during HostbasedAuthentication
+
+IgnoreUserKnownHosts yes 
+# Specifies whether sshd should ignore the user's ~/.ssh/known_hosts during RhostsRSAAuthentication or HostbasedAuthentication. The default is ''no''
+
+IgnoreRhosts yes 
+# Specifies that .rhosts and .shosts files will not be used in RhostsRSAAuthentication or HostbasedAuthentication.
+# /etc/hosts.equiv and /etc/ssh/shosts.equiv are still used. The default is ''yes''. 
+
+# RhostsRSAAuthentication yes
+# This specifies whether sshd can try to use rhosts based authentication. Because rhosts authentication is insecure you shouldn't use this option. 
+
+RSAAuthentication yes
+# This specifies whether to try RSA authentication. This option must be set to yes for better security in your session
+
+# To disable tunneled clear text passwords, change to no here!
+PasswordAuthentication no
+PermitEmptyPasswords no
+
+# Change to yes to enable challenge-response passwords (beware issues with
+# some PAM modules and threads)
+ChallengeResponseAuthentication no
+
+# Kerberos options
+KerberosAuthentication no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+#KerberosGetAFSToken no
+
+# GSSAPI options
+GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+#GSSAPIStrictAcceptorCheck yes
+#GSSAPIKeyExchange no
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM no
+
+
+AllowGroups sshusers
+# Defines a group a user is required to be a member of in order to be allowed SSH access
+# AllowUsers tobor rob chris tom 
+# Allow users can be used instead of Allow groups if desired
+
+#DenyGroups
+# Deny Groups and users can also be defined as well. Typically it is easier to make a whitelist by adding allowed users to a group
+#DenyUsers
+
+AllowAgentForwarding yes
+AllowTcpForwarding yes
+
+GatewayPorts no
+
+
+X11Forwarding yes
+# Enable this if I plan on using X11 to open applications on a remote device through SSH
+X11DisplayOffset 10
+X11UseLocalhost yes
+
+PermitTTY yes
+
+PrintMotd yes
+# Great for printing a welcome message after authenticating to the server
+
+PrintLastLog yes
+# Considered more secure while the answer is yes so the person signing in can verify the last time they logged in
+
+TCPKeepAlive no
+# I turn this off and use Client Keep Alive's instead
+# Specifies whether the system should send TCP keepalive messages to the other side. If they are sent, death of the connection or crash of one of the machines will be properly noticed
+# However, this means that connections will die if the route is down temporarily, and some people find it annoying. 
+# On the other hand, if TCP keepalives are not sent, sessions may hang indefinitely on the server, leaving ''ghost'' users and consuming server resources. I use Client Keep Alives instead
+
+
+PermitUserEnvironment no
+# Specifies whether ~/.ssh/environment and environment= options in ~/.ssh/authorized_keys are processed by sshd. 
+# The default is ''no''. Enabling environment processing may enable users to bypass access restrictions in some configurations using mechanisms such as LD_PRELOAD. 
+
+Compression delayed
+# Specifies whether compression is allowed, or delayed until the user has authenticated successfully. The argument must be ''yes'', ''delayed'', or ''no''. The default is ''delayed''.
+# This can be helpful to enable if your connection is slow
+
+ClientAliveInterval 15
+# Sets a timeout interval in seconds after which if no data has been received from the client, sshd will send a message through the encrypted channel to request a response from the client. 
+# The default is 0, indicating that these messages will not be sent to the client. This option applies to protocol version 2 only. 
+
+ClientAliveCountMax 3
+# Sets the number of client alive messages from setting above which may be sent without sshd receiving any messages back from the client.
+
+UseDNS no
+# Specifies whether sshd should look up the remote host name and check that the resolved host name for the remote IP address maps back to the very same IP address. The default is ''yes''. 
+# I change this to no because the option is basically useless
+
+PidFile /var/run/sshd.pid
+
+MaxStartups 10:30:100
+# Specifies the maximum number of concurrent unauthenticated connections to the SSH daemon. Additional connections will be dropped until authentication succeeds
+# start:rate:full 
+#     sshd will refuse connection attempts with a probability of ``rate/100'' (30%) if there are currently ``start'' (10) unauthenticated connections.  
+#     The probability increases linearly and all connection attempts are refused if the number of unauthenticated connections reaches ``full'' (60).
+
+PermitTunnel no
+# Specifies whether tun device forwarding is allowed. The argument must be ''yes'', ''point-to-point'' (layer 3), ''ethernet'' (layer 2), or ''no''. Specifying ''yes'' permits both ''point-to-point'' and ''ethernet''. The default is ''no''.
+
+ChrootDirectory none
+# Specifies a path to chroot to after authentication. This path, and all its components, must be root-owned directories that are not writable by any other user or group. 
+# After the chroot, sshd changes the working directory to the user's home directory. 
+
+VersionAddendum none
+
+# no default banner path
+Banner /etc/issue 
+
+# Prevent ssh from advertising its version
+DebianBanner no
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+Match User tom
+	PasswordAuthentication yes
+	HostbasedAuthentication no
+	PubkeyAuthentication no
+
+Match User chris
+	PasswordAuthentication no
+	HostBasedAuthentication yes
+	PubkeyAuthentication no
+
+Match all
+	PasswordAuthentication no
+	HostbasedAuthentication no
+	PermitEmptyPasswords no
+
+
+# override default of no subsystems
+#Subsystem	sftp	/usr/lib/openssh/sftp-server
+
+# Example of overriding settings on a per-user basis
+#Match User anoncvs
+#	X11Forwarding no
+#	AllowTcpForwarding no
+#	PermitTTY no
+#	ForceCommand cvs server
