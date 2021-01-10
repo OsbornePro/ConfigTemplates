@@ -149,7 +149,7 @@ hide_ids=YES
 #
 # Define PASV port range that can be used with FTP
 pasv_min_port=40000
-pasv_max_port=42000
+pasv_max_port=41000
 #
 # You may activate the "-R" option to the builtin ls. This is disabled by
 # default to avoid remote users being able to cause excessive I/O on large
@@ -173,8 +173,8 @@ pam_service_name=vsftpd
 #
 # This option specifies the location of the RSA certificate to use for SSL
 # encrypted connections.
-rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+rsa_cert_file=/etc/ssl/certs/vsftpd.crt
+rsa_private_key_file=/etc/ssl/private/vsftpd.pem
 ssl_enable=NO
 
 #
