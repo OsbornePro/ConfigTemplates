@@ -3,8 +3,8 @@
 #----------------------------------------------------------------------------
 # Issue these commands to set up the server the way needed for this to work
 #----------------------------------------------------------------------------
-# sudo mkdir -p /var/ftp/public
-# sudo chown nobody:nogroup /var/ftp/public
+# sudo mkdir -p /var/run/vsftp/public
+# sudo chown nobody:nogroup /var/run/vsftp/public
 # sudo useradd ftpsecure
 
 # Example config file /etc/vsftpd.conf
@@ -186,10 +186,8 @@ listen_port=21
 force_local_data_ssl=YES
 force_local_logins_ssl=YES
 #
-#enable this if you enable ssl.
-ssl_tlsv1_2=YES
-ssl_tlsv1_1=NO
-ssl_tlsv1=NO
+#enable this if you enable ssl. TLSv1 here is not acutally tlsv1 it is tlsv1.2. The setting name is misleading
+ssl_tlsv1=YES
 ssl_sslv2=NO
 ssl_sslv3=NO
 #
