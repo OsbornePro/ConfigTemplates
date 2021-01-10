@@ -1,0 +1,13 @@
+# Weak config file for Samba in /etc/samba/smb.conf. 
+# I use this configuration if I am exploiting an Remote File Inclusion (RFI) Vulnerability or something along those lines
+
+client min protocol = LANMAN1
+# Add this to change the minimum SMB protocol. It will improve enum4linux results
+
+[MyShare]
+   comment = Weak SMB
+   path = /tmp
+   guest ok = yes
+   browseable = yes
+   create mask = 0600
+   directory mask = 0700
