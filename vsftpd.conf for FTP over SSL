@@ -67,7 +67,7 @@ xferlog_enable=YES
 #
 # Make sure PORT transfer connections originate from port 20 (ftp-data).
 connect_from_port_20=NO
-ftp_data_port=989
+ftp_data_port=20
 #
 # Define passive port range
 pasv_min_port=40000
