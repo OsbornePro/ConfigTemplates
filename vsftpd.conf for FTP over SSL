@@ -3,9 +3,9 @@
 #----------------------------------------------------------------------------
 # Issue these commands to set up the server the way needed for this to work
 #----------------------------------------------------------------------------
-# mkdir -p /var/ftp/public
-# chown nobody:nogroup /var/ftp/public
-# useraddd ftpsecure
+# sudo mkdir -p /var/ftp/public
+# sudo chown nobody:nogroup /var/ftp/public
+# sudo useradd ftpsecure
 
 # Example config file /etc/vsftpd.conf
 #
