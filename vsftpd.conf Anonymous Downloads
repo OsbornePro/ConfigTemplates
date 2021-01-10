@@ -1,188 +1,113 @@
-# Issue these commands to set up the server the way needed for this to work
-#----------------------------------------------------------------------------
-# mkdir -p /var/ftp/public
-# chown nobody:nogroup /var/ftp/public
-# useraddd ftpsecure
-
-
-# Example config file /etc/vsftpd.conf
+#============================================================================
+# CONFIG FOR VSFTPD SERVER THAT SECURELY ALLOWS ANONYMOUS DOWNLOADS
+#============================================================================
+# INSTALL COMMAND: 
+#     sudo apt update && apt install -y vsftpd
 #
-# The default compiled in settings are fairly paranoid. This sample file
-# loosens things up a bit, to make the ftp daemon more usable.
-# Please see vsftpd.conf.5 for all compiled in defaults.
+# GENERATE CERTIFICATES IF YOU WISH TO USE SSL
+#     sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
+#  NOTE: If you want to use SSL be sure to uncomment the SSL values in the CONFIGURED SETTINGS section below
 #
-# READ THIS: This example file is NOT an exhaustive list of vsftpd options.
-# Please read the vsftpd.conf.5 manual page to get a full idea of vsftpd's
-# capabilities.
+# CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
+#     sudo mkdir -p /var/ftp/public
+#     sudo chown nobody:nogroup /var/ftp/public
+#     sudo useradd ftpsecure
 #
+# DOWNLOAD AND USE THIS CONFIGURATION FILE
+#     sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
+#     sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20for%20FTP%20over%20SSL -O /etc/vsftpd.conf
+#     sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd.conf file at /etc/vsftpd.conf.bak"
 #
-# Run standalone?  vsftpd can run either from an inetd or as a standalone
-# daemon started from an initscript.
-listen=YES
+# CONFIGURE FIREWALL RULES TO ALLOW FTP USING WHATEVER FIREWALL YOu USe
+#   FIREWALL-CMD
+#        sudo firewall-cmd --zone=public --add-port=21/tcp --permanent
+#        sudo firewall-cmd --zone=public --add-port=20/tcp --permanent
+#        sudo firewall-cmd --zone=public --add-port=40000-41000/tcp
+#        sudo firewall-cmd --reload
+#   IPTABLES
+#        iptables -A INPUT -p tcp -m tcp --dport 21 -j ACCEPT
+#        iptables -A INPUT -p tcp -m tcp --dport 20 -j ACCEPT
+#        iptables -A OUTPUT -p tcp -m tcp --sport 21 -j ACCEPT
+#        iptables -A OUTPUT -p tcp -m tcp --sport 20 -j ACCEPT
+#        iptables -A INPUT -p tcp -m tcp --dport 40000:41000 -j ACCEPT
+#        iptables -A OUTPUT -p tcp -m tcp --sport 40000:41000 -j ACCEPT
+#        sudo service iptables restart
+#   UFW
+#        sudo ufw allow 20:21/tcp
+#        sudo ufw allow 40000:41000/tcp
+#        sudo ufw reload
+#        OR
+#        sudo ufw allow ftp-data
+#        sudo ufw allow ftp
+#        sudo ufw reload
 #
-# This directive enables listening on IPv6 sockets. By default, listening
-# on the IPv6 "any" address (::) will accept connections from both IPv6
-# and IPv4 clients. It is not necessary to listen on *both* IPv4 and IPv6
-# sockets. If you want that (perhaps because you want to listen on specific
-# addresses) then you must run two copies of vsftpd with two configuration
-# files.
-listen_ipv6=NO
-#
-# Allow anonymous FTP? (Disabled by default).
+#------------------------------------------------------------------------------
+# CONFIGURED SETTINGS
+#------------------------------------------------------------------------------
 anonymous_enable=YES
-#
-# Uncomment this to allow local users to log in.
+no_anon_password=YES
+anon_root=/var/ftp/public/
 local_enable=NO
-#
-# Uncomment this to enable any form of FTP write command.
+
+# PREVENT UPLOADS
 write_enable=NO
-#
-# Default umask for local users is 077. You may wish to change this to 022,
-# if your users expect that (022 is used by most other ftpd's)
-local_umask=022
-#
-# Uncomment this to allow the anonymous FTP user to upload files. This only
-# has an effect if the above global write enable is activated. Also, you will
-# obviously need to create a directory writable by the FTP user.
 anon_upload_enable=NO
-#
-# Uncomment this if you want the anonymous FTP user to be able to create
-# new directories.
 anon_mkdir_write_enable=NO
-#
 anon_other_write_enable=NO
-#
-# Activate directory messages - messages given to remote users when they
-# go into a certain directory.
-dirmessage_enable=YES
-#
-# If enabled, vsftpd will display directory listings with the time
-# in  your  local  time  zone.  The default is to display GMT. The
-# times returned by the MDTM FTP command are also affected by this
-# option.
-use_localtime=YES
-#
-# Activate logging of uploads/downloads.
-xferlog_enable=YES
-#
-# Make sure PORT transfer connections originate from port 20 (ftp-data).
-connect_from_port_20=YES
-#
-# If you want, you can arrange for uploaded anonymous files to be owned by
-# a different user. Note! Using "root" for uploaded files is not
-# recommended!
+
+# PERMISSIONS
+local_umask=022
 chown_uploads=YES
 chown_username=nobody
-#
-# You may override where the log file goes if you like. The default is shown
-# below.
-xferlog_file=/var/log/vsftpd.log
-#
-# If you want, you can have your log file in standard ftpd xferlog format.
-# Note that the default log file location is /var/log/xferlog in this case.
-#xferlog_std_format=YES
-#
-# You may change the default value for timing out an idle session.
-idle_session_timeout=60
-#
-# You may change the default value for timing out a data connection.
-data_connection_timeout=120
-#
-# The timeout, in seconds, for a remote client to establish connection with
-# a PASV style data connection.
-accept_timeout=60
-#
-# The timeout, in seconds, for a remote client to respond to our PORT
-# style data connection.
-connect_timeout=60
-#
-# It is recommended that you define on your system a unique user which the
-# ftp server can use as a totally isolated and unprivileged user.
-nopriv_user=ftpsecure
-#
-# Enable this and the server will recognise asynchronous ABOR requests. Not
-# recommended for security (the code is non-trivial). Not enabling it,
-# however, may confuse older FTP clients.
-async_abor_enable=YES
-#
-# By default the server will pretend to allow ASCII mode but in fact ignore
-# the request. Turn on the below options to have the server actually do ASCII
-# mangling on files when in ASCII mode.
-# Beware that on some FTP servers, ASCII support allows a denial of service
-# attack (DoS) via the command "SIZE /big/file" in ASCII mode. vsftpd
-# predicted this attack and has always been safe, reporting the size of the
-# raw file.
-# ASCII mangling is a horrible feature of the protocol.
 ascii_upload_enable=NO
 ascii_download_enable=NO
-#
-# You may fully customise the login banner string:
-ftpd_banner=FTP Anonymous Download Server
-#
-# You may specify a file of disallowed anonymous e-mail addresses. Apparently
-# useful for combatting certain DoS attacks.
-#deny_email_enable=YES
-# (default follows)
-#banned_email_file=/etc/vsftpd.banned_emails
-#
-# You may restrict local users to their home directories.  See the FAQ for
-# the possible risks in this before using chroot_local_user or
-# chroot_list_enable below.
-#chroot_local_user=YES
-#
-# You may specify an explicit list of local users to chroot() to their home
-# directory. If chroot_local_user is YES, then this list becomes a list of
-# users to NOT chroot().
-# (Warning! chroot'ing can be very dangerous. If using chroot, make sure that
-# the user does not have write access to the top level directory within the
-# chroot)
-#chroot_local_user=YES
-#chroot_list_enable=YES
-# (default follows)
-#chroot_list_enable=YES 
-#chroot_list_file=/var/ftp/public
-#chroot_list_file=/etc/vsftpd.chroot_list
-anon_root=/var/ftp/public/
-no_anon_password=YES
-anon_max_rate=30000
+async_abor_enable=YES
+ls_recurse_enable=NO
 hide_ids=YES
-#
-# Define PASV port range that can be used with FTP
+nopriv_user=ftpsecure
+secure_chroot_dir=/var/run/vsftpd/empty
+
+# LISTENER
+listen=YES
+listen_ipv6=NO
+connect_from_port_20=YES
 pasv_min_port=40000
 pasv_max_port=41000
-#
-# You may activate the "-R" option to the builtin ls. This is disabled by
-# default to avoid remote users being able to cause excessive I/O on large
-# sites. However, some broken FTP clients such as "ncftp" and "mirror" assume
-# the presence of the "-R" option, so there is a strong case for enabling it.
-#ls_recurse_enable=YES
-#
-# Customization
-#
-# Some of vsftpd's settings don't fit the filesystem layout by
-# default.
-#
-# This option should be the name of a directory which is empty.  Also, the
-# directory should not be writable by the ftp user. This directory is used
-# as a secure chroot() jail at times vsftpd does not require filesystem
-# access.
-secure_chroot_dir=/var/run/vsftpd/empty
-#
-# This string is the name of the PAM service vsftpd will use.
+
+# LOG SETTINGS
+dirmessage_enable=YES
+use_localtime=YES
+xferlog_enable=YES
+xferlog_file=/var/log/vsftpd.log
+
+# SESSION SETTINGS
+ftpd_banner=FTP Anonymous Download Server
+idle_session_timeout=60
+data_connection_timeout=120
+accept_timeout=60
+connect_timeout=60
+anon_max_rate=30000
+
+# OTHER SETTINGS
+utf8_filesystem=YES
+one_process_model=YES
 pam_service_name=vsftpd
-#
-# This option specifies the location of the RSA certificate to use for SSL
-# encrypted connections.
-rsa_cert_file=/etc/ssl/certs/vsftpd.crt
-rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+
+# --------------------------------------------------------------------
+# UNCOMMENT BELOW SETTINGS TO USE FTP OVER SSL
+#---------------------------------------------------------------------
+# CHANGE BELOW TO ssl_enable=YES to use FTP over SSL
 ssl_enable=NO
 
-#
-# Uncomment this to indicate that vsftpd use a utf8 filesystem.
-utf8_filesystem=YES
-#
-# Prevent a lot of resources from being used by disabling ls -R
-ls_recurse_enable=NO
-#
-# Use one process per connection to gain performance
-one_process_model=YES
+#debug_ssl=YES
+#rsa_cert_file=/etc/ssl/private/vsftpd.crt
+#rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+#ssl_ciphers=HIGH
+#allow_anon_ssl=YES
+#implicit_ssl=YES
+#force_local_data_ssl=YES
+#force_local_logins_ssl=YES
+#ssl_tlsv1=YES
+#ssl_sslv2=NO
+#ssl_sslv3=NO
+#require_ssl_reuse=NO
