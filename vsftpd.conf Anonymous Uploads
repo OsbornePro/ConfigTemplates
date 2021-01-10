@@ -1,28 +1,130 @@
-# VSFTPD Configuration to Securely Allow Anonymous uploads to an FTP server (vsftpd)
+#============================================================================
+# CONFIG FOR VSFTPD SERVER THAT SECURELY ALLOWS ANONYMOUS UPLOADS
+#============================================================================
+# INSTALL COMMAND: 
+#     sudo apt update && apt install -y vsftpd
+#
+# GENERATE CERTIFICATES IF YOU WISH TO USE SSL
+#     sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
+#  NOTE: If you want to use SSL be sure to uncomment the SSL values in the CONFIGURED SETTINGS section below
+#
+# CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
+#     sudo mkdir -p /var/ftp/public
+#     sudo chown nobody:nogroup /var/ftp/public
+#     sudo useradd ftpsecure
+#
+# DOWNLOAD AND USE THIS CONFIGURATION FILE
+#     sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
+#     sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Uploads -O /etc/vsftpd.conf
+#     sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd.conf file at /etc/vsftpd.conf.bak"
+#
+# CONFIGURE FIREWALL RULES TO ALLOW FTP USING WHATEVER FIREWALL YOu USe
+#   FIREWALL-CMD
+#        sudo firewall-cmd --zone=public --add-port=21/tcp --permanent
+#        sudo firewall-cmd --zone=public --add-port=20/tcp --permanent
+#        sudo firewall-cmd --zone=public --add-port=40000-41000/tcp
+#        sudo firewall-cmd --reload
+#   IPTABLES
+#        iptables -A INPUT -p tcp -m tcp --dport 21 -j ACCEPT
+#        iptables -A INPUT -p tcp -m tcp --dport 20 -j ACCEPT
+#        iptables -A OUTPUT -p tcp -m tcp --sport 21 -j ACCEPT
+#        iptables -A OUTPUT -p tcp -m tcp --sport 20 -j ACCEPT
+#        iptables -A INPUT -p tcp -m tcp --dport 40000:41000 -j ACCEPT
+#        iptables -A OUTPUT -p tcp -m tcp --sport 40000:41000 -j ACCEPT
+#        sudo service iptables restart
+#   UFW
+#        sudo ufw allow 20:21/tcp
+#        sudo ufw allow 40000:41000/tcp
+#        sudo ufw reload
+#        OR
+#        sudo ufw allow ftp-data
+#        sudo ufw allow ftp
+#        sudo ufw reload
+#
+#------------------------------------------------------------------------------
+# CONFIGURED SETTINGS
+#------------------------------------------------------------------------------
 anonymous_enable=YES
+no_anon_password=YES
+anon_root=/var/ftp/public/
 local_enable=YES
-write_enable=YES
-local_umask=022
-anon_umask=077
-anon_upload_enable=YES
-anon_mkdir_write_enable=YES
-dirmessage_enable=YES
-xferlog_enable=YES
-connect_from_port_20=YES
-chown_uploads=YES
-chown_username=ftp
-xferlog_std_format=YES
-pam_service_name=ftp
-listen=YES
 tcp_wrappers=YES
 guest_enable=YES
 guest_username=ftp
-anon_other_write_enable=YES
-anon_root=/var/ftp/pub
 
-#----------------------------------------------------------------------------
-# Issue these commands to set up the server the way needed for this to work
-#----------------------------------------------------------------------------
-# mkdir -p /var/ftp/public
-# chown nobody:nogroup /var/ftp/public
-# useraddd ftpsecure
+# LIMIT COMMANDS THAT CAN BE EXECUTED. SEPARATE MULTIPLE VALUES WITH A COMMA
+cmds_allowed=PUT
+
+# ALLOW UPLOADS
+write_enable=YES
+anon_upload_enable=YES
+anon_mkdir_write_enable=YES
+anon_other_write_enable=YES
+
+# PERMISSIONS
+local_umask=022
+anon_umask=077
+chown_uploads=YES
+chown_username=ftp
+ascii_upload_enable=NO
+ascii_download_enable=NO
+async_abor_enable=YES
+ls_recurse_enable=NO
+hide_ids=YES
+nopriv_user=ftpsecure
+secure_chroot_dir=/var/run/vsftpd/empty
+
+# LISTENER
+listen=YES
+listen_ipv6=NO
+connect_from_port_20=YES
+pasv_min_port=40000
+pasv_max_port=41000
+
+# LOG SETTINGS
+dirmessage_enable=YES
+use_localtime=YES
+xferlog_enable=YES
+xferlog_file=/var/log/vsftpd.log
+xferlog_std_format=YES
+log_ftp_protocol=YES
+vsftpd_log_file=/var/log/vsftpd.log
+dual_log_enable=YES
+syslog_enable=NO
+
+# SESSION SETTINGS
+session_support=YES
+idle_session_timeout=60
+data_connection_timeout=120
+accept_timeout=60
+connect_timeout=60
+anon_max_rate=30000
+
+# BANNER CAN BE
+ftpd_banner=FTP Anonymous Upload Server
+# OR
+#banner_file=/etc/vsftpd.welcome_banner
+
+# OTHER SETTINGS
+utf8_filesystem=YES
+one_process_model=YES
+pam_service_name=vsftpd
+
+# --------------------------------------------------------------------
+# UNCOMMENT BELOW SETTINGS TO USE FTP OVER SSL
+#---------------------------------------------------------------------
+# CHANGE BELOW TO ssl_enable=YES to use FTP over SSL
+ssl_enable=NO
+
+#debug_ssl=YES
+#rsa_cert_file=/etc/ssl/private/vsftpd.crt
+#rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+#ssl_ciphers=HIGH
+#allow_anon_ssl=YES
+#implicit_ssl=YES
+#force_local_data_ssl=YES
+#force_local_logins_ssl=YES
+#ssl_tlsv1=YES
+#ssl_sslv2=NO
+#ssl_sslv3=NO
+#require_ssl_reuse=NO
