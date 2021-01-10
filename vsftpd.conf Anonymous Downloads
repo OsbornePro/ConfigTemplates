@@ -49,6 +49,9 @@ no_anon_password=YES
 anon_root=/var/ftp/public/
 local_enable=NO
 
+# RESTRICT COMMANDS THAT CAN BE EXECUTED
+cmds_allowed=GET,MGET,PGET,PWD,LS,DIR,CD,LCD,EXIT,QUIT,HELP,DEBUG
+
 # PREVENT UPLOADS
 write_enable=NO
 anon_upload_enable=NO
