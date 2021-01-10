@@ -1,0 +1,28 @@
+# VSFTPD Configuration to Securely Allow Anonymous uploads to an FTP server (vsftpd)
+anonymous_enable=YES
+local_enable=YES
+write_enable=YES
+local_umask=022
+anon_umask=077
+anon_upload_enable=YES
+anon_mkdir_write_enable=YES
+dirmessage_enable=YES
+xferlog_enable=YES
+connect_from_port_20=YES
+chown_uploads=YES
+chown_username=ftp
+xferlog_std_format=YES
+pam_service_name=ftp
+listen=YES
+tcp_wrappers=YES
+guest_enable=YES
+guest_username=ftp
+anon_other_write_enable=YES
+anon_root=/var/ftp/pub
+
+#----------------------------------------------------------------------------
+# Issue these commands to set up the server the way needed for this to work
+#----------------------------------------------------------------------------
+# mkdir -p /var/ftp/public
+# chown nobody:nogroup /var/ftp/public
+# useraddd ftpsecure
