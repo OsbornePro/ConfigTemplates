@@ -71,7 +71,7 @@ ftp_data_port=20
 #
 # Define passive port range
 pasv_min_port=40000
-pasv_max_port=50000
+pasv_max_port=41000
 #
 # If you want, you can arrange for uploaded anonymous files to be owned by
 # a different user. Note! Using "root" for uploaded files is not
@@ -170,10 +170,14 @@ secure_chroot_dir=/var/run/vsftpd/empty
 # This string is the name of the PAM service vsftpd will use.
 pam_service_name=vsftpd
 #
-# This option specifies the location of the RSA certificate to use for SSL
-# encrypted connections.
+
+
+# This option specifies the location of the RSA certificate to use for SSL encrypted connections.
+# COMMAND EXECUTED TO CREATE CERTS
+# sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
 rsa_cert_file=/etc/ssl/certs/vsftpd.crt
-rsa_private_key_file=/etc/ssl/private/vsftpd.key
+rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+
 ssl_enable=YES
 ssl_ciphers=HIGH
 allow_anon_ssl=NO
