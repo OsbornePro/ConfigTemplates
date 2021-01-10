@@ -96,7 +96,7 @@ userlist_enable=YES
 userlist_file=/etc/vsftpd.userlist
 userlist_deny=NO
 #
-allow_writeable_chroot=YES
+allow_writeable_chroot=NO
 #chroot_local_user=YES
 #
 # You may change the default value for timing out an idle session.
