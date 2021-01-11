@@ -6,7 +6,7 @@
 #
 # GENERATE CERTIFICATES IF YOU WISH TO USE SSL
 #     sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
-#  NOTE: If you want to use SSL be sure to uncomment the SSL values in the CONFIGURED SETTINGS section below
+#  NOTE: If you do not want to use SSL be sure to comment out the SSL values in the CONFIGURED SETTINGS section below and set ssl_enable=NO
 #
 # CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
 #     sudo mkdir -p /var/ftp/public
@@ -120,17 +120,17 @@ pam_service_name=vsftpd
 # UNCOMMENT BELOW SETTINGS TO USE FTP OVER SSL
 #---------------------------------------------------------------------
 # CHANGE BELOW TO ssl_enable=YES to use FTP over SSL
-ssl_enable=NO
+ssl_enable=YES
 
-#debug_ssl=YES
-#rsa_cert_file=/etc/ssl/private/vsftpd.crt
-#rsa_private_key_file=/etc/ssl/private/vsftpd.pem
-#ssl_ciphers=HIGH
-#allow_anon_ssl=YES
-#implicit_ssl=YES
-#force_local_data_ssl=YES
-#force_local_logins_ssl=YES
-#ssl_tlsv1=YES
-#ssl_sslv2=NO
-#ssl_sslv3=NO
-#require_ssl_reuse=NO
+debug_ssl=YES
+rsa_cert_file=/etc/ssl/certs/vsftpd.crt
+rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+ssl_ciphers=HIGH
+allow_anon_ssl=YES
+implicit_ssl=YES
+force_local_data_ssl=YES
+force_local_logins_ssl=YES
+ssl_tlsv1=YES
+ssl_sslv2=NO
+ssl_sslv3=NO
+require_ssl_reuse=NO
