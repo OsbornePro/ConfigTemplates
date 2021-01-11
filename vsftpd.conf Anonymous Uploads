@@ -1,6 +1,11 @@
 #========================================================================================
 # CONFIG FOR VSFTPD SERVER THAT SECURELY ALLOWS ANONYMOUS UPLOADS AND LOCAL USER SIGN IN
 #========================================================================================
+# VSFTPD is a pain in the butt with anonymous uploads. You need the below configured before connecting to the FTP server. 
+# Once all the below is configured connect to the FTP server
+# Then you need too change the permissions on /var/ftp/public by doing ```sudo chmod a+w /var/ftp/public```
+# You can now upload files. If you disconnect or restart vsftpd.service and try to reconnect vsftpd will not let you
+#
 # INSTALL COMMAND: 
 #     sudo apt update && apt install -y vsftpd
 #
@@ -11,8 +16,10 @@
 # CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
 #     sudo mkdir -p /var/ftp/public
 #     sudo chown nobody:nogroup /var/ftp/public
+#     sudo chmod 775 /var/ftp/public
 #     sudo useradd ftpsecure
-#     sudo echo 'youremail@email.com >> /etc/vsftpd.email_passwords
+#     sudo touch /etc/vsftpd.email_passwords
+#     sudo vi /etc/vsftpd.email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
 #     sudo chmod 640 /etc/vsftpd.email_passwords
 #
 # DOWNLOAD AND USE THIS CONFIGURATION FILE
@@ -48,10 +55,13 @@
 #------------------------------------------------------------------------------
 anonymous_enable=YES
 anon_root=/var/ftp/public/
-local_enable=YES
+local_enable=NO
 tcp_wrappers=YES
+allow_writeable_chroot=YES
 guest_enable=YES
 guest_username=ftp
+chown_uploads=YES
+chown_username=ftp
 
 # ANONYMOUS USER PASSWORD SETTINGS
 no_anon_password=YES
@@ -59,7 +69,8 @@ secure_email_list_enable=YES
 #  FOR secure_email_list_enable YOU NEED TO ADD EMAIL ADDRESSES/PASSWORDS ONE PER LINE TO THE FILE /etc/vsftpd.email_passwords
 
 # LIMIT COMMANDS THAT CAN BE EXECUTED. SEPARATE MULTIPLE VALUES WITH A COMMA
-cmds_allowed=PUT,MPUT.MKDIR,MV,MMV,PWD,LS,DIR,CD,LCD,EXIT,QUIT,HELP,DEBUG
+#cmds_allowed=ABOR,ACCT,ALLO,APPE,BINARY,CDUP,CWD,DELE,EPRT,EPSV,FEAT,HELP,LIST,MDTM,MODE,NLST,NOOP,OPTS,PASS,PASV,PORT,PWD,QUIT,REIN,REST,RETR,RMD,RNFR,RNTO,SITE,SIZE,SMNT,STAT,STOR,STOU,STRU,SYST,TYPE,USER,XCUP,XCWD,XPWD,XRMD
+#cmds_denied=GET,MGET,RM,RMD,RMDIR,XRMD,MKD,MKDIR,XMKD
 
 # ALLOW UPLOADS
 write_enable=YES
@@ -70,8 +81,6 @@ anon_other_write_enable=YES
 # PERMISSIONS
 local_umask=022
 anon_umask=077
-chown_uploads=YES
-chown_username=ftp
 ascii_upload_enable=NO
 ascii_download_enable=NO
 async_abor_enable=YES
