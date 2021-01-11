@@ -64,7 +64,7 @@ chown_uploads=YES
 chown_username=ftp
 
 # ANONYMOUS USER PASSWORD SETTINGS
-no_anon_password=YES
+no_anon_password=NO
 secure_email_list_enable=YES
 #  FOR secure_email_list_enable YOU NEED TO ADD EMAIL ADDRESSES/PASSWORDS ONE PER LINE TO THE FILE /etc/vsftpd.email_passwords
 
