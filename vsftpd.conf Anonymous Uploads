@@ -1,6 +1,6 @@
-#============================================================================
-# CONFIG FOR VSFTPD SERVER THAT SECURELY ALLOWS ANONYMOUS UPLOADS
-#============================================================================
+#========================================================================================
+# CONFIG FOR VSFTPD SERVER THAT SECURELY ALLOWS ANONYMOUS UPLOADS AND LOCAL USER SIGN IN
+#========================================================================================
 # INSTALL COMMAND: 
 #     sudo apt update && apt install -y vsftpd
 #
@@ -12,6 +12,8 @@
 #     sudo mkdir -p /var/ftp/public
 #     sudo chown nobody:nogroup /var/ftp/public
 #     sudo useradd ftpsecure
+#     sudo echo 'youremail@email.com >> /etc/vsftpd.email_passwords
+#     sudo chmod 640 /etc/vsftpd.email_passwords
 #
 # DOWNLOAD AND USE THIS CONFIGURATION FILE
 #     sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
@@ -45,12 +47,16 @@
 # CONFIGURED SETTINGS
 #------------------------------------------------------------------------------
 anonymous_enable=YES
-no_anon_password=YES
 anon_root=/var/ftp/public/
 local_enable=YES
 tcp_wrappers=YES
 guest_enable=YES
 guest_username=ftp
+
+# ANONYMOUS USER PASSWORD SETTINGS
+no_anon_password=YES
+secure_email_list_enable=YES
+#  FOR secure_email_list_enable YOU NEED TO ADD EMAIL ADDRESSES/PASSWORDS ONE PER LINE TO THE FILE /etc/vsftpd.email_passwords
 
 # LIMIT COMMANDS THAT CAN BE EXECUTED. SEPARATE MULTIPLE VALUES WITH A COMMA
 cmds_allowed=PUT,MPUT.MKDIR,MV,MMV,PWD,LS,DIR,CD,LCD,EXIT,QUIT,HELP,DEBUG
