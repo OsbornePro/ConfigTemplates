@@ -8,17 +8,15 @@
 #     sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
 #
 # CREATE DIRECTORY FOR LOCAL USERS TO UPLOAD AND DOWNLOAD FROM
-#     sudo useradd ftpsecure
-# NOTE: To leave the option open to use different home directories or settings for different users we are doing the below commands to create conf files for users
+# NOTE: The below creates the FTP home directory in user home directories
 #     sudo -i
-#     mkdir -p /etc/vsftpd_user_config_dir
+#     useradd ftpsecure
 #     USERS=$(ls /home)
-# OR  USERS=$(grep bash /etc/passwd | cut -d':' -f 1)
 #     for u in $USERS; do
-#             echo "local_root=/home/$u/ftp" > /etc/vsftpd_user_config_dir/$u
-#             mkdir -p /home/$u/ftp/upload
+#             echo $u >> /etc/vsftpd.userlist
+#             mkdir -p /home/$u/ftp/files
 #             chown nobody:nogroup /home/$u/ftp
-#             chown $u:$u /home/$u/ftp/upload
+#             chown $u:$u /home/$u/ftp/files
 #             chmod a-w /home/$u/ftp
 #      done
 #
@@ -75,7 +73,6 @@ anon_upload_enable=NO
 anon_mkdir_write_enable=NO
 user_sub_token=$USER
 local_root=/home/$USER/ftp
-user_config_dir=/etc/vsftpd_user_config_dir/
 userlist_enable=YES
 userlist_file=/etc/vsftpd.userlist
 userlist_deny=NO
