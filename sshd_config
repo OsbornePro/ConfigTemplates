@@ -246,3 +246,41 @@ Match all
 #	AllowTcpForwarding no
 #	PermitTTY no
 #	ForceCommand cvs server
+
+############################################################################################################
+# Unapplicable Settings for Windows
+############################################################################################################
+#AcceptEnv
+#AllowStreamLocalForwarding
+#AuthorizedKeysCommand
+#AuthorizedKeysCommandUser
+#AuthorizedPrincipalsCommand
+#AuthorizedPrincipalsCommandUser
+#Compression
+#ExposeAuthInfo
+#GSSAPIAuthentication
+#GSSAPICleanupCredentials
+#GSSAPIStrictAcceptorCheck
+#HostbasedAcceptedKeyTypes
+#HostbasedAuthentication
+#HostbasedUsesNameFromPacketOnly
+#IgnoreRhosts
+#IgnoreUserKnownHosts
+#KbdInteractiveAuthentication
+#KerberosAuthentication
+#KerberosGetAFSToken
+#KerberosOrLocalPasswd
+#KerberosTicketCleanup
+#PermitTunnel
+#PermitUserEnvironment
+#PermitUserRC
+#idFile
+#PrintLastLog
+#RDomain
+#StreamLocalBindMask
+#StreamLocalBindUnlink
+#StrictModes
+#X11DisplayOffset
+#X11Forwarding
+#X11UseLocalhost
+#XAuthLocation
