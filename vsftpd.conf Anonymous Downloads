@@ -6,13 +6,14 @@
 #
 # GENERATE CERTIFICATES IF YOU WISH TO USE SSL
 #     sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
-#  NOTE: If you want to use SSL be sure to uncomment the SSL values in the CONFIGURED SETTINGS section below
+#  NOTE: If you do want to use SSL be sure to comment out the SSL values at the end of CONFIGURED SETTINGS section below and make ssl_enable=NO
 #
 # CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
 #     sudo mkdir -p /var/ftp/public
 #     sudo chown nobody:nogroup /var/ftp/public
 #     sudo useradd ftpsecure
-#     sudo echo 'youremail@email.com >> /etc/vsftpd.email_passwords
+#     sudo touch /etc/vsftpd.email_passwords
+#     sudo vi /etc/vsftpd.email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
 #     sudo chmod 640 /etc/vsftpd.email_passwords
 #
 # DOWNLOAD AND USE THIS CONFIGURATION FILE
@@ -51,7 +52,7 @@ anon_root=/var/ftp/public/
 local_enable=NO
 
 # ANON USER PASSWORD SETTINGS
-no_anon_password=YES
+no_anon_password=NO
 secure_email_list_enable=YES
 #  FOR secure_email_list_enable YOU NEED TO ADD EMAIL ADDRESSES/PASSWORDS ONE PER LINE TO THE FILE /etc/vsftpd.email_passwords
 
@@ -59,7 +60,8 @@ secure_email_list_enable=YES
 anon_world_readable_only=YES
 
 # RESTRICT COMMANDS THAT CAN BE EXECUTED
-cmds_allowed=GET,MGET,PGET,PWD,LS,DIR,CD,LCD,EXIT,QUIT,HELP,DEBUG
+#cmds_allowed=ABOR,ACCT,ALLO,APPE,BINARY,CDUP,CWD,DELE,EPRT,EPSV,FEAT,HELP,LIST,MDTM,MODE,NLST,NOOP,OPTS,PASS,PASV,PORT,PWD,QUIT,REIN,REST,RETR,RMD,RNFR,RNTO,SITE,SIZE,SMNT,STAT,STOR,STOU,STRU,SYST,TYPE,USER,XCUP,XCWD,XPWD,XRMD
+cmds_denied=PUT,MPUT,RM,RMD,RMDIR,XRMD,MKD,MKDIR,XMKD
 
 # PREVENT UPLOADS
 write_enable=NO
@@ -69,8 +71,6 @@ anon_other_write_enable=NO
 
 # PERMISSIONS
 local_umask=022
-chown_uploads=YES
-chown_username=nobody
 ascii_upload_enable=NO
 ascii_download_enable=NO
 async_abor_enable=YES
@@ -87,13 +87,22 @@ pasv_min_port=40000
 pasv_max_port=41000
 
 # LOG SETTINGS
+log_ftp_protocol=YES
 dirmessage_enable=YES
 use_localtime=YES
 xferlog_enable=YES
 xferlog_file=/var/log/vsftpd.log
+xferlog_std_format=NO
+syslog_enable=NO
+dual_log_enable=YES
+vsftpd_log_file=/var/log/vsftpd.log
+
+# BANNER
+ftpd_banner=FTP Anonymous Download Server
+# OR
+#banner_file=/etc/vsftpd.welcome_message
 
 # SESSION SETTINGS
-ftpd_banner=FTP Anonymous Download Server
 idle_session_timeout=60
 data_connection_timeout=120
 accept_timeout=60
@@ -108,18 +117,19 @@ pam_service_name=vsftpd
 # --------------------------------------------------------------------
 # UNCOMMENT BELOW SETTINGS TO USE FTP OVER SSL
 #---------------------------------------------------------------------
-# CHANGE BELOW TO ssl_enable=YES to use FTP over SSL
-ssl_enable=NO
+# CHANGE BELOW TO ssl_enable=NO if you do not want to use FTP over SSL
+ssl_enable=YES
 
-#debug_ssl=YES
-#rsa_cert_file=/etc/ssl/private/vsftpd.crt
-#rsa_private_key_file=/etc/ssl/private/vsftpd.pem
-#ssl_ciphers=HIGH
-#allow_anon_ssl=YES
-#implicit_ssl=YES
-#force_local_data_ssl=YES
-#force_local_logins_ssl=YES
-#ssl_tlsv1=YES
-#ssl_sslv2=NO
-#ssl_sslv3=NO
-#require_ssl_reuse=NO
+# COMMENT OUT ALL THE BELOW IF YOU DONT WANT TO USE FTP over SSL
+debug_ssl=YES
+rsa_cert_file=/etc/ssl/certs/vsftpd.crt
+rsa_private_key_file=/etc/ssl/private/vsftpd.pem
+ssl_ciphers=HIGH
+allow_anon_ssl=YES
+implicit_ssl=YES
+force_local_data_ssl=YES
+force_local_logins_ssl=YES
+ssl_tlsv1=YES
+ssl_sslv2=NO
+ssl_sslv3=NO
+require_ssl_reuse=NO
