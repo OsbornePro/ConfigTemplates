@@ -81,6 +81,7 @@ secure_chroot_dir=/var/run/vsftpd/empty
 
 # LISTENER
 listen=YES
+listen_port=21
 listen_ipv6=NO
 connect_from_port_20=YES
 pasv_min_port=40000
