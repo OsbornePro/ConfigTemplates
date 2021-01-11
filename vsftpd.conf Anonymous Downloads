@@ -12,6 +12,8 @@
 #     sudo mkdir -p /var/ftp/public
 #     sudo chown nobody:nogroup /var/ftp/public
 #     sudo useradd ftpsecure
+#     sudo echo 'youremail@email.com >> /etc/vsftpd.email_passwords
+#     sudo chmod 640 /etc/vsftpd.email_passwords
 #
 # DOWNLOAD AND USE THIS CONFIGURATION FILE
 #     sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
@@ -45,9 +47,16 @@
 # CONFIGURED SETTINGS
 #------------------------------------------------------------------------------
 anonymous_enable=YES
-no_anon_password=YES
 anon_root=/var/ftp/public/
 local_enable=NO
+
+# ANON USER PASSWORD SETTINGS
+no_anon_password=YES
+secure_email_list_enable=YES
+#  FOR secure_email_list_enable YOU NEED TO ADD EMAIL ADDRESSES/PASSWORDS ONE PER LINE TO THE FILE /etc/vsftpd.email_passwords
+
+# ANONYMOUS USER CAN ONLY DOWNLOAD WORLD READABLE FILES
+anon_world_readable_only=YES
 
 # RESTRICT COMMANDS THAT CAN BE EXECUTED
 cmds_allowed=GET,MGET,PGET,PWD,LS,DIR,CD,LCD,EXIT,QUIT,HELP,DEBUG
