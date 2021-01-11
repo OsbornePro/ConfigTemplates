@@ -79,7 +79,7 @@ userlist_enable=YES
 userlist_file=/etc/vsftpd.userlist
 userlist_deny=NO
 allow_writeable_chroot=NO
-nopriv_user=nobody
+nopriv_user=ftpsecure
 chroot_local_user=YES
 secure_chroot_dir=/var/run/vsftpd/empty
 
