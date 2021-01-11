@@ -14,9 +14,10 @@
 #  NOTE: If you do not want to use SSL be sure to comment out the SSL values in the CONFIGURED SETTINGS section below and set ssl_enable=NO
 #
 # CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
-#     sudo mkdir -p /var/ftp/public
+#     sudo mkdir -p /var/ftp/public/files
 #     sudo chown nobody:nogroup /var/ftp/public
-#     sudo chmod 775 /var/ftp/public
+#     sudo chmod 664 /var/ftp/public
+#     sudo chmod a+w /var/ftp/public/files
 #     sudo useradd ftpsecure
 #     sudo touch /etc/vsftpd.email_passwords
 #     sudo vi /etc/vsftpd.email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
