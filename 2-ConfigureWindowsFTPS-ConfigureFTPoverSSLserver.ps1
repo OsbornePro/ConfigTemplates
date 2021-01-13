@@ -10,8 +10,8 @@
 
 Function Test-Admin {
 
-    $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
-    $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+    $CurrentUser = New-Object -TypeName Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
+    $CurrentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     
 }  # End Function Test-Admin
 
@@ -20,7 +20,7 @@ If ((Test-Admin) -eq $False)
 
     If ($Elevated) 
     {
-        Write-Output "Tried to elevate, did not work, aborting"
+        Write-Output "[*] Tried to elevate, did not work, aborting"
         
     }  # End Else 
     Else 
