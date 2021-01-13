@@ -8,6 +8,32 @@
 # This script will select the SSL cert to use if it has a friendly name containing FTP and enable 128-bit encryption. It also enables basic auth for users to sign in
 # This script confiures isolation mode with Active Directory and allows you to set the IP address and passive ports for the firewall
 
+Function Test-Admin {
+
+    $currentUser = New-Object Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
+    $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+    
+}  # End Function Test-Admin
+
+If ((Test-Admin) -eq $False)  
+{
+
+    If ($Elevated) 
+    {
+        Write-Output "Tried to elevate, did not work, aborting"
+        
+    }  # End Else 
+    Else 
+    {
+    
+        Start-Process -FilePath "C:\Windows\System32\powershell.exe" -Verb RunAs -ArgumentList ('-NoProfile -NoExit -File "{0}" -Elevated' -f ($myinvocation.MyCommand.Definition))
+        
+    }  # End Else
+    
+    Exit
+    
+}  # End If
+
 Write-Warning "The execution of this script assumes your server is a member of a domain and you are signed in with a member of the Domain Admins group"
 Read-Host -Prompt "Press ENTER to continue when ready"
 
@@ -26,6 +52,10 @@ $FTPSiteName = Read-Host -Prompt "Enter a name for the FTP site that will appear
 $FTPRootDir = Read-Host -Prompt "Enter the absoulte path to your FTP directory. Note that the directory you define will be created for you. EXAMPLE: C:\inetpub\FTP-Root"
 $Port = Read-Host -Prompt "Enter a port for the FTP Server to listen on EXAMPLE: 21"
 $FTPSitePath = "IIS:\Sites\$FTPSiteName"
+
+
+Write-Output "[*] Creating an allow firewall rule using the port you defined"
+New-NetFirewallRule -Name "Allow FTP Communication" -DisplayName "Allow FTP Communication" -Description 'Allows FTP Communication on port 21' -Profile Any -Direction Inbound -Action Allow -Protocol TCP -Program Any -LocalAddress Any -LocalPort $Port
 
 
 Write-Output "[*] Creating the FTP directory at $FTPRootDir"
@@ -155,6 +185,10 @@ If ($Ansr -like "y*")
     Write-Output "[*] Configuring Minimum and Maximum port values for Data channel ports"
     Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name lowDataChannelPort -Value $V1
     Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name highDataChannelPort -Value $V2
+    
+    Write-Output "[*] Creating an allow firewall rule using the passive ports you defined"
+    New-NetFirewallRule -Name "Allow FTP Passive Communication" -DisplayName "Allow FTP Passive Communication" -Description 'Allows FTP Passive Communication' -Profile Any -Direction Inbound -Action Allow -Protocol TCP -Program Any -LocalAddress Any -LocalPort $V1-V2 
+
 
 }  # End If
 
@@ -187,6 +221,7 @@ If ($A -like "y*")
     Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "`n$IPAddress        $VHost $Server $env:COMPUTERNAME`n" -Force
 
 }  # End If
+
 
 Write-Output "[*] Restarting the FTP Site to load changes"
 Restart-WebItem -PSPath $FTPSitePath
