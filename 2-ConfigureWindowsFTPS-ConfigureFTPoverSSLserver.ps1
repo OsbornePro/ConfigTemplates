@@ -8,9 +8,11 @@
 Write-Warning "The execution of this script assumes your server is a member of a domain and you are signed in with a member of the Domain Admins group"
 Read-Host -Prompt "Press ENTER to continue when ready"
 
-Write-Output "[*] Installing the Windows feature for FTP"
+Write-Output "[*] Installing the Windows features for FTP"
 Install-WindowsFeature -Name Web-FTP-Server -IncludeAllSubFeature
 Install-WindowsFeature -Name Web-Server -IncludeAllSubFeature -IncludeManagementTools
+
+Write-Outpu "[*] Importing commands"
 Import-Module -Name WebAdministration -Global
 
 
@@ -90,16 +92,19 @@ If ((Get-ItemProperty -Path $FTPSitePath -Name $SSLPolicy[1]) -notlike 'SslRequi
 
 
 Write-Output "[*] Setting permissions on $FTPRootDir"
+# USERS
 $LocalAccount = New-Object -TypeName System.Security.Principal.NTAccount("$FTPGroupName")
 $ADAdmin = New-Object -TypeName System.Security.Principal.NTAccount "$env:USERDNSDOMAIN\$ADFTPAdmin"
 $ADUser = New-Object -TypeName System.Security.Principal.NTAccount "$env:USERDNSDOMAIN\$ADFTPUser"
 
+# PERMISSIONS
 $AdminRights = [System.Security.AccessControl.FileSystemRights]"FullControl,Modify,ReadAndExecute,ListDirectory,Read,Write"
 $UserRights = [System.Security.AccessControl.FileSystemRights]"Modify,ReadAndExecute,ListDirectory,Read,Write"
 $InheritanceFlag = @([System.Security.AccessControl.InheritanceFlags]::ContainerInherit,[System.Security.AccessControl.InheritanceFlags]::ObjectInherit)
 $PropagationFlag = [System.Security.AccessControl.PropagationFlags]::None
 $ObjType = [System.Security.AccessControl.AccessControlType]::Allow
 
+# SET OWNER AND ACCESS
 $ObjAce1 = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule($ADAdmin, $AdminRights, $InheritanceFlag, $PropagationFlag, $ObjType)
 $ACL = Get-Acl -Path $FTPRootDir
 $Acl.SetOwner($ADAdmin)
@@ -118,7 +123,6 @@ Set-Acl -Path $FTPRootDir -AclObject $ACL
 
 
 Write-Output "[*] Adding authorization read rule to the FTP site for FTP domain groups"
-
 Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$env:USERDOMAIN\$ADFTPAdmin";permissions="Read,Write";Users="*"} -PSPath 'IIS:\' -Location $FTPSiteName
 Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$env:USERDOMAIN\$ADFTPUser";permissions=1} -PSPath 'IIS:\' -Location $FTPSiteName
 
@@ -131,11 +135,21 @@ Set-ItemProperty -Path $FTPSitePath -Name ftpServer.userIsolation.activeDirector
 Set-ItemProperty -Path $FTPSitePath -Name ftpserver.userisolation.mode -Value ActiveDirectory
 
 
-Write-Output "[*] Setting SSL certificate to be used with FTP over SSL"
+Write-Output "[*] Setting SSL certificate to be used with FTP over SSL. This obtains a certificate containing FTP in the FriendlyName"
 Set-ItemProperty -Path $FTPSiteName -Name ftpServer.security.ssl.serverCertHash -Value (Get-ChildItem -Path Cert:\ -Recurse | Where-Object -Property FriendlyName -like "*FTP*") # Replace my sample thumbprint with the value from your certificate
-# Data channel ports are a per server configuration
-#Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name lowDataChannelPort -Value 5000
-#Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name highDataChannelPort -Value 6000
+
+$Ansr = Read-Host -Prompt "Would you like to define the passive (PASV) ports to listen on? [y/N]"
+If ($Ansr -like "y*")
+{
+
+    $V1 = Read-Host -Prompt "What should the lowest accepted port be? EXAMPLE: 40000"
+    $V2 = Read-Host -Prompt "What should the highest accepted port be? EXAPMLE: 41000"
+    
+    Write-Output "[*] Configuring Minimum and Maximum port values for Data channel ports"
+    Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name lowDataChannelPort -Value $V1
+    Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name highDataChannelPort -Value $V2
+
+}  # End If
 
 Write-Output "[*] Enabling 128-bit encryption"
 $ConfigPath = 'ftpServer.security.ssl'
@@ -153,12 +167,23 @@ $IPAddress = (Get-NetIPAddress -AddressFamily IPv4 -AddressState Preferred -Pref
 Set-ItemProperty -Path $FTPSitePath -Name ftpServer.firewallSupport.externalIp4Address -Value $IPAddress
 
 
-#Write-Output "[*] Add a custom web binding hostname if desired"
-#New-WebBinding -Name $FTPSiteName -Protocol ftp  -HostHeader "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -Port 21 -SslFlags 1
+$A = Read-Host -Prompt "Would you like to add a virtual host name for your ftp site? [y/N]"
+If ($A -like "y*")
+{
 
+    $VHost = Read-Host -Prompt "What should the virtual hostname be? EXAMPLE: ftp.domain.com"
+
+    Write-Output "[*] Adding a custom web binding hostname"
+    New-WebBinding -Name $FTPSiteName -Protocol ftp  -HostHeader $VHost -Port $Port -SslFlags 1
+
+    Write-Output "[*] Adding entry for $Vhost to your C:\Windows\System32\drivers\etc\hosts file"
+    Add-Content -Path "C:\Windows\System32\drivers\etc\hosts" -Value "`n$IPAddress        $VHost $Server $env:COMPUTERNAME`n" -Force
+
+}  # End If
 
 Write-Output "[*] Restarting the FTP Site to load changes"
 Restart-WebItem -PSPath $FTPSitePath
 
 
+Write-Output "[*] Testing FTP port is open"
 Test-NetConnection -ComputerName "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -Port $Port
