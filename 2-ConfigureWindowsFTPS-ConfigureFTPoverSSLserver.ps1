@@ -117,10 +117,14 @@ $ObjAce2 = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRu
 $ACL.SetAccessRule($ObjAce2)
 Set-Acl -Path $FTPRootDir -AclObject $ACL
 
-$ObjAce = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule($LocalAccount, $UserRights, $InheritanceFlag, $PropagationFlag, $ObjType)
-$ACL.SetAccessRule($ObjAce2)
-Set-Acl -Path $FTPRootDir -AclObject $ACL
+If (Get-LocalGroup -Name $FTPGroupName)
+{
 
+    $ObjAce = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule($LocalAccount, $UserRights, $InheritanceFlag, $PropagationFlag, $ObjType)
+    $ACL.SetAccessRule($ObjAce2)
+    Set-Acl -Path $FTPRootDir -AclObject $ACL
+
+}  # End If
 
 Write-Output "[*] Adding authorization read rule to the FTP site for FTP domain groups"
 Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$env:USERDOMAIN\$ADFTPAdmin";permissions="Read,Write";Users="*"} -PSPath 'IIS:\' -Location $FTPSiteName
