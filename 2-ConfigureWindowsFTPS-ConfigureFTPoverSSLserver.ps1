@@ -1,8 +1,11 @@
 # This script is meant to be run on Windows Server 2019 where you want to set up an FTP over SSL Server
+# This script creates a directory for the FTPS Server that will be accessible for downloads by local users and uploads for admin users.
+# This does not create directories for the Active Directory users to use via FTP because this assumes that you have home drives in AD assigned for them to upload and download files. 
+# The Home Drive directory values should be assigned in the CSV file for msIIS-FTPDir and msIIS-FTPRoot AD attribute values
 #
 # This script is used to install the FTP and IIS management tools on a Windows Server. Itf you grant consent it will create a local FTP user and group after you confirm it to do so.
 # This script will modify permissions on the FTP folder you define as well as create the folder if it does not exist.
-# This script will select the SSL cert to use if it has a friendly name containing FTP and enable 128-bit encryption. It als oenables basic auth for users to sign in
+# This script will select the SSL cert to use if it has a friendly name containing FTP and enable 128-bit encryption. It also enables basic auth for users to sign in
 # This script confiures isolation mode with Active Directory and allows you to set the IP address and passive ports for the firewall
 
 Write-Warning "The execution of this script assumes your server is a member of a domain and you are signed in with a member of the Domain Admins group"
