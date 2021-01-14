@@ -38,10 +38,10 @@ Write-Warning "The execution of this script assumes your server is a member of a
 Read-Host -Prompt "Press ENTER to continue when ready"
 
 Write-Output "[*] Installing the Windows features for FTP"
-Install-WindowsFeature -Name Web-FTP-Server -IncludeAllSubFeature
+Install-WindowsFeature Web-FTP-Server -IncludeManagementTools
 Install-WindowsFeature -Name Web-Server -IncludeAllSubFeature -IncludeManagementTools
 
-Write-Outpu "[*] Importing commands"
+Write-Output "[*] Importing commands"
 Import-Module -Name WebAdministration -Global
 
 
@@ -173,7 +173,7 @@ Set-ItemProperty -Path $FTPSitePath -Name ftpserver.userisolation.mode -Value Ac
 
 
 Write-Output "[*] Setting SSL certificate to be used with FTP over SSL. This obtains a certificate containing FTP in the FriendlyName"
-Set-ItemProperty -Path $FTPSiteName -Name ftpServer.security.ssl.serverCertHash -Value (Get-ChildItem -Path Cert:\ -Recurse | Where-Object -Property FriendlyName -like "*FTP*") # Replace my sample thumbprint with the value from your certificate
+Set-ItemProperty -Path $FTPSitePath -Name ftpServer.security.ssl.serverCertHash -Value (Get-ChildItem -Path Cert:\ -Recurse | Where-Object -Property FriendlyName -like "*FTP*").Thumbprint.ToString() # Replace my sample thumbprint with the value from your certificate
 
 $Ansr = Read-Host -Prompt "Would you like to define the passive (PASV) ports to listen on? [y/N]"
 If ($Ansr -like "y*")
@@ -187,7 +187,7 @@ If ($Ansr -like "y*")
     Set-WebConfigurationProperty -PSPath IIS:\ -Filter system.ftpServer/firewallSupport -Name highDataChannelPort -Value $V2
     
     Write-Output "[*] Creating an allow firewall rule using the passive ports you defined"
-    New-NetFirewallRule -Name "Allow FTP Passive Communication" -DisplayName "Allow FTP Passive Communication" -Description 'Allows FTP Passive Communication' -Profile Any -Direction Inbound -Action Allow -Protocol TCP -Program Any -LocalAddress Any -LocalPort $V1-V2 
+    New-NetFirewallRule -Name "Allow FTP Passive Communication" -DisplayName "Allow FTP Passive Communication" -Description 'Allows FTP Passive Communication' -Profile Any -Direction Inbound -Action Allow -Protocol TCP -Program Any -LocalAddress Any -LocalPort $V1-$V2 
 
 
 }  # End If
