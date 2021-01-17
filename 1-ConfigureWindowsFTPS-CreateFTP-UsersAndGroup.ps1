@@ -5,9 +5,9 @@
 #
 # CONTENTS OF UserList.csv ----------------------------
 #SamAccountName,Directory,Root,Permission
-#rosborne,\\ca.osbornepro.com\C$\inetpub\ftproot,\FTPS,Admin
-#legion,\\ca.osbornepro.com\C$\inetpub\ftproot\FTPS,\ShadowKing,User
-#theshadowking,\\ca.osbornepro.com\C$\inetpub\ftproot\FTPS,\Legion,User
+#rosborne,\\ftp.osbornepro.com\FTPS,\,Admin
+#legion,\\ftp.osbornepro.com\FTPS\ShadowKing,\,User
+#theshadowking,\\ftp.osbornepro.com\FTPS\Legion,\,User
 # END CONTENTS OF UsersList.csv -----------------------
 #
 If (Test-Path -Path $env:USERPROFILE\Documents\UserList.csv)
