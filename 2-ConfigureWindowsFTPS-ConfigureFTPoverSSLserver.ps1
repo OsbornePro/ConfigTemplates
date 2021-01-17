@@ -8,6 +8,8 @@
 # This script will select the SSL cert to use if it has a friendly name containing FTP and enable 128-bit encryption. It also enables basic auth for users to sign in
 # This script confiures isolation mode with Active Directory and allows you to set the IP address and passive ports for the firewall
 
+# REFERENCE : https://docs.microsoft.com/en-us/iis/configuration/system.applicationhost/sites/site/ftpserver/security/ssl
+
 $Logo = @"
 ╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
 ║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
@@ -73,61 +75,51 @@ Write-Output "[*] Creating the FTP directory at $FTPRootDir"
 New-Item -Path $FTPRootDir -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
 
 Write-Output "[*] Creating FTP Site based on the info you provided"
-New-WebFtpSite -Name $FTPSiteName -Port $Port -PhysicalPath $FTPRootDir
+New-WebFtpSite -Name $FTPSiteName -Port $Port -PhysicalPath $FTPRootDir -Force
 
 
-$Answer = Read-Host -Prompt "Would you like to create a local FTP user and FTP group to access the FTP server? [y/N]"
-If ($Answer -like "y*")
+$FTPGroupName = Read-Host -Prompt "What should the local FTP Users group name be? EXAMPLE: FTP-Users"
+Write-Output "[*] Creating the local FTP Group $FTPGroupName"
+
+If (!(Get-LocalGroup -Name $FTPGroupName -ErrorAction SilentlyContinue))
 {
 
-    $FTPUsername = Read-Host -Prompt " What should the local FTP username be EXAMPLE: FTPUser"
-    $FTPPassword = ConvertTo-SecureString -String (Read-Host -Prompt "Enter a password for the local FTP user" -AsSecureString) -AsPlainText -Force
-    $FTPGroupName = Read-Host -Prompt "What should the local FTP Users group name be? EXAMPLE: FTP-Users"
-
-    Write-Output "[*] Creating the local FTP User $FTPUsername"
-    If (!(Get-LocalUser -Name $FTPUserName -ErrorAction SilentlyContinue)) 
-    {
-
-        New-LocalUser -Name $FTPUserName -Password $FTPPassword -UserMayNotChangePassword
-
-    }  # End If
-    
-    Write-Output "[*] Creating the local FTP Group $FTPGroupName"
-    If (!(Get-LocalGroup -Name $FTPGroupName -ErrorAction SilentlyContinue))
-    {
-
-        New-LocalGroup -Name $FTPGroupName -Description "Members of this group can access the FTP server"
-
-    }  # End If
-
-    Write-Output "[*] Adding $FTPUsername to the $FTPGroupName group"
-    Add-LocalGroupMember -Group $FTPGroupName -Member $FTPUsername
-
-
-    Write-Output "[*] Adding authorization read rule to the FTP site for $FTPGroupName"
-    Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$FTPGroupName";permissions="Read,Write";Users="*"} -PSPath 'IIS:\' -Location $FTPSiteName
+    New-LocalGroup -Name $FTPGroupName -Description "Members of this group can access the FTP server"
 
 }  # End If
+Else
+{
+
+    Write-Output "[!] Group $FTPGroupName already exists. Skipping its creation"
+
+}  # End Else
+
+
+Write-Output "[*] Adding Active Directory FTP Users to the $FTPGroupName group"
+Add-LocalGroupMember -Group $FTPGroupName -Member $ADFTPUser
+Add-LocalGroupMember -Group $FTPGroupName -Member $ADFTPAdmin
+
+Write-Output "[*] Adding authorization read rule to the FTP site for $FTPGroupName"
+Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$FTPGroupName";permissions="Read,Write";Users="*"} -PSPath 'IIS:\' -Location $FTPSiteName
 
 
 Write-Output "[*] Enabling Basic Authentication on FTP Site"
 Set-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.authentication.basicAuthentication.enabled' -Value $True
 
 
-$SSLPolicy = 'ftpServer.security.ssl.controlChannelPolicy','ftpServer.security.ssl.dataChannelPolicy'
-If ((Get-ItemProperty -Path $FTPSitePath -Name $SSLPolicy[0]) -notlike 'SslRequire')
+If ((Get-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.controlChannelPolicy') -notlike 'SslRequire')
 {
 
     Write-Output "[*] Configuring SSL to be required"
-    Set-ItemProperty -Path $FTPSitePath -Name $SSLPolicy[0] -Value $True
+    Set-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.controlChannelPolicy' -Value $True
 
 }  # End If
 
-If ((Get-ItemProperty -Path $FTPSitePath -Name $SSLPolicy[1]) -notlike 'SslRequire')
+If ((Get-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.dataChannelPolicy') -notlike 'SslRequire')
 {
 
     Write-Output "[*] Configuring SSL to be required"
-    Set-ItemProperty -Path $FTPSitePath -Name $SSLPolicy[1] -Value $True
+    Set-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.dataChannelPolicy' -Value $True
 
 }  # End If
 
