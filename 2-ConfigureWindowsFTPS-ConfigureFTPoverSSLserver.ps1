@@ -81,9 +81,17 @@ If ($Answer -like "y*")
 {
 
     $FTPUsername = Read-Host -Prompt " What should the local FTP username be EXAMPLE: FTPUser"
+    $FTPPassword = ConvertTo-SecureString -String (Read-Host -Prompt "Enter a password for the local FTP user" -AsSecureString) -AsPlainText -Force
     $FTPGroupName = Read-Host -Prompt "What should the local FTP Users group name be? EXAMPLE: FTP-Users"
 
+    Write-Output "[*] Creating the local FTP User $FTPUsername"
+    If (!(Get-LocalUser -Name $FTPUserName -ErrorAction SilentlyContinue)) 
+    {
 
+        New-LocalUser -Name $FTPUserName -Password $FTPPassword -UserMayNotChangePassword
+
+    }  # End If
+    
     Write-Output "[*] Creating the local FTP Group $FTPGroupName"
     If (!(Get-LocalGroup -Name $FTPGroupName -ErrorAction SilentlyContinue))
     {
@@ -91,17 +99,6 @@ If ($Answer -like "y*")
         New-LocalGroup -Name $FTPGroupName -Description "Members of this group can access the FTP server"
 
     }  # End If
-
-
-    Write-Output "[*] Creating the local FTP User $FTPUsername"
-    $FTPPassword = ConvertTo-SecureString -String (Read-Host -Prompt "Enter a password for the local FTP user" -AsSecureString) -AsPlainText -Force
-    If (!(Get-LocalUser -Name $FTPUserName -ErrorAction SilentlyContinue)) 
-    {
-
-        New-LocalUser -Name $FTPUserName -Password $FTPPassword -Description "Local user account with permisssions to the FTP server" -UserMayNotChangePassword
-
-    }  # End If
-
 
     Write-Output "[*] Adding $FTPUsername to the $FTPGroupName group"
     Add-LocalGroupMember -Group $FTPGroupName -Member $FTPUsername
