@@ -8,15 +8,13 @@
 # This script will select the SSL cert to use if it has a friendly name containing FTP and enable 128-bit encryption. It also enables basic auth for users to sign in
 # This script confiures isolation mode with Active Directory and allows you to set the IP address and passive ports for the firewall
 
-# REFERENCE : https://docs.microsoft.com/en-us/iis/configuration/system.applicationhost/sites/site/ftpserver/security/ssl
-
 $Logo = @"
-╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
-║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
-║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
-║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
-║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
-╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+________         ___.                             __________                
+\_____  \   _____\_ |__   ___________  ____   ____\______   \_______  ____  
+ /   |   \ /  ___/| __ \ /  _ \_  __ \/    \_/ __ \|     ___/\_  __ \/  _ \ 
+/    |    \\___ \ | \_\ (  <_> )  | \/   |  \  ___/|    |     |  | \(  <_> )
+\_______  /____  >|___  /\____/|__|  |___|  /\___  >____|     |__|   \____/ 
+        \/     \/     \/                  \/     \/                         
 "@
 
 Function Test-Admin {
@@ -59,7 +57,9 @@ Import-Module -Name WebAdministration -Global
 
 
 $ADFTPUser = Read-Host -Prompt "What is the name of the Active Directory group you created for FTP Users? EXAMPLE: FTP-Users"
+$ADUserPermission = Read-Host -Prompt "What permissions should $ADFTPUser group members have? [Read/Write/Read,Write]"
 $ADFTPAdmin = Read-Host -Prompt "What is the name of the Active Directory group you created for FTP Admins? EXAMPLE: FTP-Admins"
+$ADAdminPermission = Read-Host -Prompt "What permissions should $ADFTPAdmin group members have? [Read/Write/Read,Write]"
 $Server = "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
 $FTPSiteName = Read-Host -Prompt "Enter a name for the FTP site that will appear in IIS Manager. EXAMPLE: OsbornePro FTPS"
 $FTPRootDir = Read-Host -Prompt "Enter the absoulte path to your FTP directory. Note that the directory you define will be created for you. EXAMPLE: C:\inetpub\FTP-Root"
@@ -78,7 +78,7 @@ Write-Output "[*] Creating FTP Site based on the info you provided"
 New-WebFtpSite -Name $FTPSiteName -Port $Port -PhysicalPath $FTPRootDir -Force
 
 
-$FTPGroupName = Read-Host -Prompt "What should the local FTP Users group name be? EXAMPLE: FTP-Users"
+$FTPGroupName = Read-Host -Prompt "What should the local FTP Users group name be? EXAMPLE: FTPUsers"
 Write-Output "[*] Creating the local FTP Group $FTPGroupName"
 
 If (!(Get-LocalGroup -Name $FTPGroupName -ErrorAction SilentlyContinue))
@@ -94,13 +94,29 @@ Else
 
 }  # End Else
 
+$Ans = Read-Host -Prompt "[*] Would you like to create a local FTP user to access the server? [y/N]"
+If ($Ans -like "y*")
+{
+    
+    $LocalFTPUserName = Read-Host -Prompt "What should be the name of the Local FTP User account?"
+    New-LocalUser -AccountNeverExpires -Description "Local FTP User account" -FullName "FTP User" -Disabled:$False -Password (Read-Host -Prompt "Enter a password for the local FTP User" -AsSecureString) -Name $LocalFTPUserName -UserMayNotChangePassword
 
-Write-Output "[*] Adding Active Directory FTP Users to the $FTPGroupName group"
+    Add-LocalGroupMember -Group $FTPGroupName -Member $LocalFTPUserName
+
+}  # End If
+
+Write-Output "[*] Adding Active Directory $ADFTPUser to the $FTPGroupName group"
 Add-LocalGroupMember -Group $FTPGroupName -Member $ADFTPUser
-Add-LocalGroupMember -Group $FTPGroupName -Member $ADFTPAdmin
 
-Write-Output "[*] Adding authorization read rule to the FTP site for $FTPGroupName"
-Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$FTPGroupName";permissions="Read,Write";Users="*"} -PSPath 'IIS:\' -Location $FTPSiteName
+
+Write-Output "[*] Adding authorization read write rule to the FTP site for $FTPGroupName"
+Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$FTPGroupName";permissions="$ADUserPermission"} -PSPath 'IIS:\' -Location $FTPSiteName
+
+Write-Output "[*] Adding authorization rules to the FTP site for $ADUserPermission"
+Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$ADFTPUser";permissions="$ADUserPermission"} -PSPath 'IIS:\' -Location $FTPSiteName
+
+Write-Output "[*] Adding authorization rules to the FTP site for $ADAdminPermission"
+Add-WebConfiguration -Filter "/system.ftpServer/security/authorization" -Value @{accessType="Allow"; roles="$ADFTPAdmin";permissions="$ADAdminPermission"} -PSPath 'IIS:\' -Location $FTPSiteName
 
 
 Write-Output "[*] Enabling Basic Authentication on FTP Site"
@@ -129,6 +145,8 @@ If (Get-LocalGroup -Name $FTPGroupName)
     Write-Output "[*] Setting permissions on $FTPRootDir"
     # USERS
     $LocalAccount = New-Object -TypeName System.Security.Principal.NTAccount("$FTPGroupName")
+    $SystemAccount = New-Object -TypeName System.Security.Principal.NTAccount("SYSTEM")
+    $AdminAccount = New-Object -TypeName System.Security.Principal.NTAccount("Administrators")
 
     # PERMISSIONS
     $Rights = [System.Security.AccessControl.FileSystemRights]"FullControl,Modify,ReadAndExecute,ListDirectory,Read,Write"
@@ -145,10 +163,20 @@ If (Get-LocalGroup -Name $FTPGroupName)
     Set-Acl -Path $FTPRootDir -AclObject $ACL
     $ACL.SetAccessRule($ObjAce1)
 
+    Write-Output "[*] Adding SYSTEM user privileges to $FTPRootDir"
+    $ObjAce2 = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule($SystemAccount, $Rights, $InheritanceFlag, $PropagationFlag, $ObjType)
+    $ACL.SetAccessRule($ObjAce2)
+    Set-Acl -Path $FTPRootDir -AclObject $ACL
+
+    Write-Output "[*] Adding Administrators group privileges to $FTPRootDir"
+    $ObjAce3 = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule($AdminAccount, $Rights, $InheritanceFlag, $PropagationFlag, $ObjType)
+    $ACL.SetAccessRule($ObjAce3)
+    Set-Acl -Path $FTPRootDir -AclObject $ACL
+
 }  # End If
 
 Write-Output "[*] Setting User Isolation mode to Active Directory assigned"
-$BindUser = Read-Host -Prompt "Enter a username that can authenticate to AD"
+$BindUser = Read-Host -Prompt "Enter a username that can authenticate to AD and query LDAP"
 $BindPass = Read-Host -Prompt "Enter that users password" -AsSecureString
 
 Set-ItemProperty -Path $FTPSitePath -Name ftpServer.userIsolation.activeDirectory.adUserName -Value $BindUser
@@ -156,13 +184,17 @@ Set-ItemProperty -Path $FTPSitePath -Name ftpServer.userIsolation.activeDirector
 Set-ItemProperty -Path $FTPSitePath -Name ftpserver.userisolation.mode -Value ActiveDirectory
 
 
-Write-Output "[*] Setting SSL certificate to be used with FTP over SSL. This obtains a certificate containing FTP in the FriendlyName"
+Get-ChildItem -Path Cert:\LocalMachine\My -Recurse | Select-Object -Property Subject,Issuer,Thumbprint,FriendlyName,NotAfter | Format-Table -AutoSize
+$Thumb = (Get-ChildItem -Path Cert:\LocalMachine -Recurse | Where-Object -Property FriendlyName -like "*FTP*")[0].Thumbprint.ToString()
+
+Write-Output "[*] The below certificate will be used for FTP over SSL communication unless otherwise defined. Above this line are some thumbprint options for you to select from"
+$Thumb
 
 $Thumbprint = Read-Host -Prompt "Enter the certificate thumbprint you want to use for the FTP over SSL instance. Leave blank and press ENTER if you wish to have this script find the certificate automatically by discovering a Local Machine cert in the Personal Store that has a friendly name containing `"*FTP*`"."
 If ($Thumbprint -eq "")
 {
 
-    $Thumbprint = (Get-ChildItem -Path Cert:\LocalMachine -Recurse | Where-Object -Property FriendlyName -like "*FTP*")[0].Thumbprint.ToString()
+    $Thumbprint = $Thumb
 
 }  # End If
 
@@ -227,3 +259,76 @@ Restart-WebItem -PSPath $FTPSitePath
 
 Write-Output "[*] Testing FTP port is open"
 Test-NetConnection -ComputerName "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -Port $Port
+
+# SIG # Begin signature block
+# MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
+# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUcEc0slDe1MaN6n9ufDdDwW0k
+# sQugggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
+# BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
+# IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
+# MDUwMzA3MDAwMFowgbQxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdBcml6b25hMRMw
+# EQYDVQQHEwpTY290dHNkYWxlMRowGAYDVQQKExFHb0RhZGR5LmNvbSwgSW5jLjEt
+# MCsGA1UECxMkaHR0cDovL2NlcnRzLmdvZGFkZHkuY29tL3JlcG9zaXRvcnkvMTMw
+# MQYDVQQDEypHbyBEYWRkeSBTZWN1cmUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5IC0g
+# RzIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC54MsQ1K92vdSTYusw
+# ZLiBCGzDBNliF44v/z5lz4/OYuY8UhzaFkVLVat4a2ODYpDOD2lsmcgaFItMzEUz
+# 6ojcnqOvK/6AYZ15V8TPLvQ/MDxdR/yaFrzDN5ZBUY4RS1T4KL7QjL7wMDge87Am
+# +GZHY23ecSZHjzhHU9FGHbTj3ADqRay9vHHZqm8A29vNMDp5T19MR/gd71vCxJ1g
+# O7GyQ5HYpDNO6rPWJ0+tJYqlxvTV0KaudAVkV4i1RFXULSo6Pvi4vekyCgKUZMQW
+# OlDxSq7neTOvDCAHf+jfBDnCaQJsY1L6d8EbyHSHyLmTGFBUNUtpTrw700kuH9zB
+# 0lL7AgMBAAGjggEaMIIBFjAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIB
+# BjAdBgNVHQ4EFgQUQMK9J47MNIMwojPX+2yz8LQsgM4wHwYDVR0jBBgwFoAUOpqF
+# BxBnKLbv9r0FQW4gwZTaD94wNAYIKwYBBQUHAQEEKDAmMCQGCCsGAQUFBzABhhho
+# dHRwOi8vb2NzcC5nb2RhZGR5LmNvbS8wNQYDVR0fBC4wLDAqoCigJoYkaHR0cDov
+# L2NybC5nb2RhZGR5LmNvbS9nZHJvb3QtZzIuY3JsMEYGA1UdIAQ/MD0wOwYEVR0g
+# ADAzMDEGCCsGAQUFBwIBFiVodHRwczovL2NlcnRzLmdvZGFkZHkuY29tL3JlcG9z
+# aXRvcnkvMA0GCSqGSIb3DQEBCwUAA4IBAQAIfmyTEMg4uJapkEv/oV9PBO9sPpyI
+# BslQj6Zz91cxG7685C/b+LrTW+C05+Z5Yg4MotdqY3MxtfWoSKQ7CC2iXZDXtHwl
+# TxFWMMS2RJ17LJ3lXubvDGGqv+QqG+6EnriDfcFDzkSnE3ANkR/0yBOtg2DZ2HKo
+# cyQetawiDsoXiWJYRBuriSUBAA/NxBti21G00w9RKpv0vHP8ds42pM3Z2Czqrpv1
+# KrKQ0U11GIo/ikGQI31bS/6kA1ibRrLDYGCD+H1QQc7CoZDDu+8CL9IVVO5EFdkK
+# rqeKM+2xLXY2JtwE65/3YR8V3Idv7kaWKK2hJn0KCacuBKONvPi8BDABMIIFIzCC
+# BAugAwIBAgIIXIhNoAmmSAYwDQYJKoZIhvcNAQELBQAwgbQxCzAJBgNVBAYTAlVT
+# MRAwDgYDVQQIEwdBcml6b25hMRMwEQYDVQQHEwpTY290dHNkYWxlMRowGAYDVQQK
+# ExFHb0RhZGR5LmNvbSwgSW5jLjEtMCsGA1UECxMkaHR0cDovL2NlcnRzLmdvZGFk
+# ZHkuY29tL3JlcG9zaXRvcnkvMTMwMQYDVQQDEypHbyBEYWRkeSBTZWN1cmUgQ2Vy
+# dGlmaWNhdGUgQXV0aG9yaXR5IC0gRzIwHhcNMjAxMTE1MjMyMDI5WhcNMjExMTA0
+# MTkzNjM2WjBlMQswCQYDVQQGEwJVUzERMA8GA1UECBMIQ29sb3JhZG8xGTAXBgNV
+# BAcTEENvbG9yYWRvIFNwcmluZ3MxEzARBgNVBAoTCk9zYm9ybmVQcm8xEzARBgNV
+# BAMTCk9zYm9ybmVQcm8wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDJ
+# V6Cvuf47D4iFITUSNj0ucZk+BfmrRG7XVOOiY9o7qJgaAN88SBSY45rpZtGnEVAY
+# Avj6coNuAqLa8k7+Im72TkMpoLAK0FZtrg6PTfJgi2pFWP+UrTaorLZnG3oIhzNG
+# Bt5oqBEy+BsVoUfA8/aFey3FedKuD1CeTKrghedqvGB+wGefMyT/+jaC99ezqGqs
+# SoXXCBeH6wJahstM5WAddUOylTkTEfyfsqWfMsgWbVn3VokIqpL6rE6YCtNROkZq
+# fCLZ7MJb5hQEl191qYc5VlMKuWlQWGrgVvEIE/8lgJAMwVPDwLNcFnB+zyKb+ULu
+# rWG3gGaKUk1Z5fK6YQ+BAgMBAAGjggGFMIIBgTAMBgNVHRMBAf8EAjAAMBMGA1Ud
+# JQQMMAoGCCsGAQUFBwMDMA4GA1UdDwEB/wQEAwIHgDA1BgNVHR8ELjAsMCqgKKAm
+# hiRodHRwOi8vY3JsLmdvZGFkZHkuY29tL2dkaWcyczUtNi5jcmwwXQYDVR0gBFYw
+# VDBIBgtghkgBhv1tAQcXAjA5MDcGCCsGAQUFBwIBFitodHRwOi8vY2VydGlmaWNh
+# dGVzLmdvZGFkZHkuY29tL3JlcG9zaXRvcnkvMAgGBmeBDAEEATB2BggrBgEFBQcB
+# AQRqMGgwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmdvZGFkZHkuY29tLzBABggr
+# BgEFBQcwAoY0aHR0cDovL2NlcnRpZmljYXRlcy5nb2RhZGR5LmNvbS9yZXBvc2l0
+# b3J5L2dkaWcyLmNydDAfBgNVHSMEGDAWgBRAwr0njsw0gzCiM9f7bLPwtCyAzjAd
+# BgNVHQ4EFgQUkWYB7pDl3xX+PlMK1XO7rUHjbrwwDQYJKoZIhvcNAQELBQADggEB
+# AFSsN3fgaGGCi6m8GuaIrJayKZeEpeIK1VHJyoa33eFUY+0vHaASnH3J/jVHW4BF
+# U3bgFR/H/4B0XbYPlB1f4TYrYh0Ig9goYHK30LiWf+qXaX3WY9mOV3rM6Q/JfPpf
+# x55uU9T4yeY8g3KyA7Y7PmH+ZRgcQqDOZ5IAwKgknYoH25mCZwoZ7z/oJESAstPL
+# vImVrSkCPHKQxZy/tdM9liOYB5R2o/EgOD5OH3B/GzwmyFG3CqrqI2L4btQKKhm+
+# CPrue5oXv2theaUOd+IYJW9LA3gvP/zVQhlOQ/IbDRt7BibQp0uWjYaMAOaEKxZN
+# IksPKEJ8AxAHIvr+3P8R17UxggJjMIICXwIBATCBwTCBtDELMAkGA1UEBhMCVVMx
+# EDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAYBgNVBAoT
+# EUdvRGFkZHkuY29tLCBJbmMuMS0wKwYDVQQLEyRodHRwOi8vY2VydHMuZ29kYWRk
+# eS5jb20vcmVwb3NpdG9yeS8xMzAxBgNVBAMTKkdvIERhZGR5IFNlY3VyZSBDZXJ0
+# aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
+# CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
+# AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
+# FM3lnMv0d2u8N7vf/gdOrERl/6AsMA0GCSqGSIb3DQEBAQUABIIBAKnaR4+dr5KC
+# FihpAHJceXlBiW1Of513HpJZ2QZwIP/kyKEAPDrBkZU4uJjMZlCEmMW5sXY2a9mI
+# 4wz1K/kbNSvchXNKiqncBKxtOpbSiQTlhXjBd/hmZ5E/cbcAZAC+bKWWmcuyzv5Y
+# F3Rup4sXtP8Sv+91P0mB3DVFfvedAITFjzJg0DFgDk2z4LgGyIbvhJYEjheNZFqc
+# LOBbfXi1TFcXlApdhKFs0D/l9o+e7RhViN6p0SaYo3KL/BrivjHOuDDkHmXX75iB
+# pHKyAxY2Cmvms9OGwun0WbUIF2RZ1dazZajyah4TrkTDNDtgFcDa6gMVMdsp4b1c
+# hi57W+FMnrc=
+# SIG # End signature block
