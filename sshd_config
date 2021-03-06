@@ -106,7 +106,7 @@ IgnoreRhosts yes
 # RhostsRSAAuthentication yes
 # This specifies whether sshd can try to use rhosts based authentication. Because rhosts authentication is insecure you shouldn't use this option. 
 
-RSAAuthentication yes
+#RSAAuthentication yes
 # This specifies whether to try RSA authentication. This option must be set to yes for better security in your session
 
 # To disable tunneled clear text passwords, change to no here!
@@ -139,7 +139,7 @@ GSSAPIAuthentication no
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
 UsePAM no
-
+# Depending on your situation you may want this set to yes. When a user account has its password disabled the SSH key authentication may not work unless this is set to yes
 
 AllowGroups sshusers
 # Defines a group a user is required to be a member of in order to be allowed SSH access
