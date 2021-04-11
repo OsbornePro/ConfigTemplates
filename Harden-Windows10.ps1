@@ -157,15 +157,13 @@ $Answer3 = Read-Host -Prompt "Would you like to allow remote access to your comp
         $TSGeneralSetting | Invoke-CimMethod -MethodName SetUserAuthenticationRequired -Arguments @{UserAuthenticationRequired=1}
 
     }  # End If
+    ElseIf ($Answer3 -like "n*")
+    {
 
-}  # End If
-ElseIf ($Answer3 -like "n*")
-{
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
+        Disable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
-    Disable-NetFirewallRule -DisplayGroup "Remote Desktop"
-
-}  # End ElseIf
+    }  # End ElseIf
 
 
 # SSL
@@ -347,8 +345,8 @@ Enable-WindowsOptionalFeature -FeatureName "Windows-Defender-ApplicationGuard" -
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUl4ONItCAOc9sAOaJXymtKc7K
-# /s+gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUVONzIMc/CcJfp2wYHniuNJpO
+# H3Cgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -408,11 +406,11 @@ Enable-WindowsOptionalFeature -FeatureName "Windows-Defender-ApplicationGuard" -
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FIkAQd84sV4/w8i6xlenDSI38HVnMA0GCSqGSIb3DQEBAQUABIIBAJbIgVji9Q4Y
-# xKU393ydYj6LWqvmojTRRZ3INTZUB7LMkr2A286sOK3bCkRGhn1YA8CuiGbZXooA
-# ahbJHsgvfhB8kRXKQ0Hm76c41Pg8wohirnrWOQoCfTis5pIYFI+h8vDGeG7r0l1c
-# V0+sScdyHkxqwJG+IOuxEPXOUFKpAbWjsU1qxvzj8rPThMoAck6D8a4GCM98/jy0
-# lqyoRsITU3BHycECAmy0XEpL+2IKNYfG54wcAG/L0m71bo3NC2Cxa0uYd2tPj5Xb
-# ocb3007Fc3ws4FCXhv5J44ukUaRCZ0BN8gqq62BORjYuO0PshR0zxiHnjMj5+1ip
-# EZ1XviyvYr0=
+# FDBIekpxNtoVMxG+aTgZplBbqcBrMA0GCSqGSIb3DQEBAQUABIIBALJ0I8LMOsYy
+# V+DEOT6FrwF8kzXDv7/LKfG78Kg4+mjW2IPugB1k1HTQUpijaXd5OzdLEMNV+pb3
+# 2FXxmuW7/PZrVGdkVbrk8zvByUmRGMXwy4utFNKbtLAji83CYOPfy1mpkGhUzEUf
+# ibe6f+cxYO28+Pu4ktkxOtGaRqCgpcs9yVP2d6Me1hxo2iZ2Q4LFApLpO8WyUzAR
+# Wdqp2jtgkFlobQuuLz/e7G7VD8tBMNxEO8WnrBkbL9N4aIHQG8G0YDRA0skYLgol
+# Dd2pWPOELyLuEG/onmyiirI6cPB7SJhGk3g8tOKK5BmW5/5j00gpgK8nry0Ja9QG
+# xHsycoKrsxU=
 # SIG # End signature block
