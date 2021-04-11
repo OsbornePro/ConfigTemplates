@@ -137,8 +137,8 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\services\NetBT\Parameters
 
 # RDP
 Write-Output "[*] Disabling Remote Assistance"
-New-Item -Path "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" -ErrorAction SilentlyContinue | Out-Null
-Set-ItemProperty -Path "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" -Name "fAllowToGetHelp" -Value 0
+New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Remote Assistance" -ErrorAction SilentlyContinue | Out-Null
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Remote Assistance" -Name "fAllowToGetHelp" -Value 0
 
 $Answer3 = Read-Host -Prompt "Would you like to allow remote access to your computer? [y/N]"
     If ($Answer3 -like "y*")
@@ -345,8 +345,8 @@ Enable-WindowsOptionalFeature -FeatureName "Windows-Defender-ApplicationGuard" -
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUVONzIMc/CcJfp2wYHniuNJpO
-# H3Cgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUVH0PMQGPKTTWjShhoqH0HU7T
+# c66gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -406,11 +406,11 @@ Enable-WindowsOptionalFeature -FeatureName "Windows-Defender-ApplicationGuard" -
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FDBIekpxNtoVMxG+aTgZplBbqcBrMA0GCSqGSIb3DQEBAQUABIIBALJ0I8LMOsYy
-# V+DEOT6FrwF8kzXDv7/LKfG78Kg4+mjW2IPugB1k1HTQUpijaXd5OzdLEMNV+pb3
-# 2FXxmuW7/PZrVGdkVbrk8zvByUmRGMXwy4utFNKbtLAji83CYOPfy1mpkGhUzEUf
-# ibe6f+cxYO28+Pu4ktkxOtGaRqCgpcs9yVP2d6Me1hxo2iZ2Q4LFApLpO8WyUzAR
-# Wdqp2jtgkFlobQuuLz/e7G7VD8tBMNxEO8WnrBkbL9N4aIHQG8G0YDRA0skYLgol
-# Dd2pWPOELyLuEG/onmyiirI6cPB7SJhGk3g8tOKK5BmW5/5j00gpgK8nry0Ja9QG
-# xHsycoKrsxU=
+# FL4//ZrbX04Gygw8st/UxtuJFN1yMA0GCSqGSIb3DQEBAQUABIIBAK2u4voW+IqM
+# 8D8zLe/BvJgyV6/xUPBQAeYt9G7w8XO6E7tnwdsgl3UY2pOSozQjyLYazjgH2b/h
+# IOyJeHF6p8hmJr2KRb1C7aJcaNwun5AXebgl5+GT37pLTc/c5UZuxkVJuYGdYtpE
+# RepRo/LHzlwoJ7zQ4hXoF4y4eUU9ck8iTPRtSyrXAQnWcPibRVzTqIeHsFiEg2vW
+# Kx5VMz8mr7ui7QXsZ2RyT6r4Dr0qTFzzDIKKMHnVckfFHVPrM+q+HawYWt1PynhB
+# GZu7zi009olLPmuUxXXga1XI0D0IRUV22P14VBy14kD90/DnC1VjbvLdllC1Y5KW
+# knoyPE3eXg0=
 # SIG # End signature block
