@@ -1,3 +1,29 @@
+Function Test-Admin {
+
+    $CurrentUser = New-Object -TypeName Security.Principal.WindowsPrincipal $([Security.Principal.WindowsIdentity]::GetCurrent())
+    $CurrentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+
+}  # End Function Test-Admin
+
+If ((Test-Admin) -eq $False)
+{
+
+    If ($Elevated)
+    {
+        Write-Output "[*] Tried to elevate, did not work, aborting"
+
+    }  # End Else
+    Else
+    {
+
+        Start-Process -FilePath "C:\Windows\System32\powershell.exe" -Verb RunAs -ArgumentList ('-NoProfile -NoExit -File "{0}" -Elevated' -f ($myinvocation.MyCommand.Definition))
+
+    }  # End Else
+
+    Exit
+
+}  # End If
+
 $Logo = @"
 ________         ___.                             __________
 \_____  \   _____\_ |__   ___________  ____   ____\______   \_______  ____
@@ -11,7 +37,6 @@ info@osbornepro.com
 $Logo
 
 Write-Output "BEGINING EXECUTION OF SCRIPT TO HARDED A WINDOWS 10 MACHINE THAT IS NOT JOINED TO A DOMAIN"
-
 
 # WDIGEST CACHE
 Write-Output "[*] Disabling WDigest credentials caching. More info here: https://www.stigviewer.com/stig/windows_10/2017-02-21/finding/V-71763"
@@ -27,6 +52,17 @@ If (($AutoLoginPassword).DefaultPassword)
     Write-Output " $AutoLoginPassword"
 
     Write-Output "[*] Sometimes it is required to allow a computer to auto logon. To secure the above password use this tool to ensure the password is hashed/obfuscated and not stored in clear text:  `nhttps://docs.microsoft.com/en-us/sysinternals/downloads/autologon"
+    $Remediate = Read-Host -Prompt "Would you like to disable auto-logon? [y/N]"
+    If ($Remediate -like "y*")
+    {
+
+        $RegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
+
+        Set-ItemProperty -Path $RegPath -Name AutoAdminLogon -Value 0
+        Set-ItemProperty -Path $RegPath -Name DefaultUserName -Value $Null
+        Set-ItemProperty -Path $RegPath -Name DefaultPassword -Value $Null
+
+    }  # End If
 
 }  # End If
 Else
@@ -35,7 +71,6 @@ Else
     Write-Output "[*] Great work! You are not using auto-logon"
 
 }  # End Else
-
 
 # ALWAYS INSTALL ELEVATED
 If (((Get-ItemProperty "HKLM:\Software\Policies\Microsoft\Windows\Installer").AlwaysInstallElevated) -eq 1)
@@ -69,6 +104,11 @@ Else
 
 }  # End Else
 
+# SSDP
+Write-Output "[*] Disabling the SSDP Service"
+Stop-Service -Name SSDPSRV -Force -ErrorAction SilentlyContinue
+Set-Service -Name SSDPSRV -StartupType Disabled
+
 
 # SMB
 Write-Output '[*] Disabling SMB version 1'
@@ -96,20 +136,36 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\services\NetBT\Parameters
 
 
 # RDP
-If (Get-NetTcpConnection -State Listen | Where-Object LocalPort -eq 3389)
-{
+Write-Output "[*] Disabling Remote Assistance"
+New-Item -Path "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" -ErrorAction SilentlyContinue | Out-Null
+Set-ItemProperty -Path "HKLM\SYSTEM\CurrentControlSet\Control\Remote Assistance" -Name "fAllowToGetHelp" -Value 0
 
-    $Answer3 = Read-Host -Prompt "Your device is listening for Remote Desktop (RDP) Connections. Would you like to enable Network Level Authentication (NLA). Note that if a domain user attempts to remote into a non-domain joined device and NLA is enabled and the login attempt will fail preventing access [y/N]"
+$Answer3 = Read-Host -Prompt "Would you like to allow remote access to your computer? [y/N]"
     If ($Answer3 -like "y*")
     {
+
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
         Write-Output "Enabling NLA on $env:COMPUTERNAME. This setting can be seen under 'View Advanced System Settings' under the 'Remote' Tab"
         $NLAinfo = Get-CimInstance -ClassName Win32_TSGeneralSetting -Namespace root\cimv2\terminalservices -Filter "TerminalName='RDP-tcp'"
         $NLAinfo | Invoke-CimMethod -MethodName SetUserAuthenticationRequired -Arguments @{ UserAuthenticationRequired = $True }
 
+        $TSSetting = Get-CimInstance -Namespace root/cimv2/TerminalServices -ClassName Win32_TerminalServiceSetting
+        $TSGeneralSetting = Get-CimInstance -Namespace root/cimv2/TerminalServices -ClassName Win32_TSGeneralSetting
+        $TSSetting | Invoke-CimMethod -MethodName SetAllowTSConnections -Arguments @{AllowTSConnections=1;ModifyFirewallException=1}
+        $TSGeneralSetting | Invoke-CimMethod -MethodName SetUserAuthenticationRequired -Arguments @{UserAuthenticationRequired=1}
+
     }  # End If
 
 }  # End If
+ElseIf ($Answer3 -like "n*")
+{
+
+    Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
+    Disable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+}  # End ElseIf
 
 
 # SSL
@@ -268,13 +324,31 @@ New-Item -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System\
 
 Write-Output "[*] Scripts already exist to enable suggested logging requirements to discover malware and threat activity."
 Write-Output "[*] I suggest using https://www.malwarearchaeology.com/s/Set_Adv_Auditing_Folders_Keys_vDec_2018-fa6n.zip"
-Pause
+
+# ENABLE DATA EXECUTION PREVENTION (DEP)
+Write-Output "[*] Enabling Data Execution Prevention (DEP)"
+Set-Processmitigation -System -Enable DEP
+
+# WINDOWS AUTO UPDATES
+$WUSettings = (New-Object -ComObject Microsoft.Update.AutoUpdate).Settings
+$WUSettings.NotificationLevel= 3
+$WUSettings.Save()
+
+# WINDOWS DEFENDER
+Write-Output "Enabling Windows Defender to check archive file types"
+Set-MpPreference -DisableArchiveScanning 0
+
+Write-Output "Enabling Windows Defender Potentially Unwanted Program (PUP) protection which prevents applications you do not tell Windows to install from installing"
+Set-MpPreference -PUAProtection 1
+
+Set-MpPreference -DisableBehaviorMonitoring $False
+Enable-WindowsOptionalFeature -FeatureName "Windows-Defender-ApplicationGuard" -Online
 
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU1TlbrtqN7gshV92KGBF+QbHt
-# BQSgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUl4ONItCAOc9sAOaJXymtKc7K
+# /s+gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -334,11 +408,11 @@ Pause
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FMmDBJUVtqVdpq0PatXNY8t/9J/mMA0GCSqGSIb3DQEBAQUABIIBAHbgUdQpfyIE
-# hyw+aA86Xtimi953EmccDHSwYHK3ZOeagRRr3Ll8NH86KypdAbLIyBGaYGHvdRZX
-# VZyhinbdm6NDvx1BdyP53/oS1UbVOpNGgTdy/jpmeXKd1ocnukzBPdJEYhIW7hEE
-# Y5jOnhKhLp/qnOASoj7BjtBo5eB6XlmF5v/tvlJMDD1MoNuX8PEikAJKKxPWe9XB
-# X7xsuE2pk6EojpGJG1JoDY9za77x34c3RS5EP0svg1ad/wAaNbc6hmqJAJoPOlOy
-# oejhlLQSixhszPkImdLliiGAx+1++VuNmikXtCJltMNG/jXyLP1LAi+seYUS2Ct2
-# 0sUnecC3kIY=
+# FIkAQd84sV4/w8i6xlenDSI38HVnMA0GCSqGSIb3DQEBAQUABIIBAJbIgVji9Q4Y
+# xKU393ydYj6LWqvmojTRRZ3INTZUB7LMkr2A286sOK3bCkRGhn1YA8CuiGbZXooA
+# ahbJHsgvfhB8kRXKQ0Hm76c41Pg8wohirnrWOQoCfTis5pIYFI+h8vDGeG7r0l1c
+# V0+sScdyHkxqwJG+IOuxEPXOUFKpAbWjsU1qxvzj8rPThMoAck6D8a4GCM98/jy0
+# lqyoRsITU3BHycECAmy0XEpL+2IKNYfG54wcAG/L0m71bo3NC2Cxa0uYd2tPj5Xb
+# ocb3007Fc3ws4FCXhv5J44ukUaRCZ0BN8gqq62BORjYuO0PshR0zxiHnjMj5+1ip
+# EZ1XviyvYr0=
 # SIG # End signature block
