@@ -115,7 +115,7 @@ ftpd_banner=OsbornePro LLC. FTP over SSL Server
 #banner_file=/etc/vsftpd.welcome_banner
 
 # SERVICE
-pam_service_name=vsftpd
+pam_service_name=ftp
 
 # SSL SETTINGS
 rsa_cert_file=/etc/ssl/certs/vsftpd.crt
