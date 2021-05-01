@@ -113,7 +113,7 @@ anon_max_rate=30000
 # OTHER SETTINGS
 utf8_filesystem=YES
 one_process_model=YES
-pam_service_name=vsftpd
+pam_service_name=ftp
 
 # --------------------------------------------------------------------
 # UNCOMMENT BELOW SETTINGS TO USE FTP OVER SSL
