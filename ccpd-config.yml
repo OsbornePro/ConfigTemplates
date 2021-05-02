@@ -1,15 +1,17 @@
-# APPLICATION: CCPD (CIS-CAT Pro Dashboad)
-# SERVER HOST: Windows Server 2016 - 2019
-# SQL SERVER : MS SQL Server 2017 - 2019
+# LINK TO DOCS: https://cis-cat-pro-dashboard.readthedocs.io/en/stable/source/Dashboard%20Deployment%20Guide%20for%20Windows/
+# APPLICATION : CCPD (CIS-CAT Pro Dashboad)
+# SERVER HOST : Windows Server 2016 - 2019
+# SQL SERVER  : MS SQL Server 2017 - 2019
 #
-# This is a starting template for CIS CAT Pro Dashboard (CCPD) that configures LDAP over SSL Usage for Authentication
+# This is a starting template for CIS CAT Pro Dashboard (CCPD) that configures LDAP over SSL Usage for Authentication with STARTTLS emails
 # This will require you to manually modify values according to your environment. You will need to import your LDAPS issuing CA certificate into the Java trust store
 #
 # IMPORT CA CERTIFICATE INTO TRUSTED JAVA KEY STORE
-# keytool -importcert -alias startssl -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -file ca.der
+# cd "C:\Program Files\AdoptOpenJDK\jdk-11.0.9.101\bin"
+# .\keytool -import -alias ca -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -file ca.der
 #
 # VERIFY SUCCESSFUL IMPORT
-# keytool -keystore "$JAVA_HOME/jre/lib/security/cacerts" -storepass changeit -list | grep startssl
+# .\keytool -keystore "$JAVA_HOME/jre/lib/security/cacerts" -storepass changeit -list | grep startssl
 
 legacy: 
     sourceDir: "C:/Tomcat/legacy/source"
@@ -54,6 +56,9 @@ grails:
         port: 587 ##########################################################
         username: "do-not-reply@domain.com" ################################
         password: "SMTPaccoutnPassword123" #################################
+        props:
+            mail.smtp.starttls.enable: "true"
+            mail.smtp.port: "587"
     assessorService:
         active: true
         url: 'http://localhost:2222'
