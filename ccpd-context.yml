@@ -1,0 +1,93 @@
+# APPLICATION: CCPD (CIS-CAT Pro Dashboad)
+# SERVER HOST: Windows Server 2016 - 2019
+# SQL SERVER : MS SQL Server 2017 - 2019
+#
+# This is a starting template for CIS CAT Pro Dashboard (CCPD) that configures LDAP over SSL Usage for Authentication
+# This will require you to manually modify values according to your environment. You will need to import your LDAPS issuing CA certificate into the Java trust store
+#
+# IMPORT CA CERTIFICATE INTO TRUSTED JAVA KEY STORE
+# keytool -importcert -alias startssl -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -file ca.der
+#
+# VERIFY SUCCESSFUL IMPORT
+# keytool -keystore "$JAVA_HOME/jre/lib/security/cacerts" -storepass changeit -list | grep startssl
+
+legacy: 
+    sourceDir: "C:/Tomcat/legacy/source"
+    processedDir: "C:/Tomcat/legacy/processed"
+    errorDir: "C:/Tomcat/legacy/error"
+
+environments:
+    production:
+        grails:
+            serverURL: 'https://CCPDserverFQDN.domain.com/CCPD' ###############################################################
+        server:
+            'contextPath': '/CCPD'
+        dataSource:
+            dbCreate: update
+
+            #DB Settings
+
+            driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+            dialect: org.hibernate.dialect.SQLServer2008Dialect
+            url: jdbc:sqlserver://SQLserverHostName:1433;databaseName=CCPD #############################################
+            username: 'sa'
+            password: 'SuperSecurePassword123!' ########################################################################
+
+            properties:
+                  jmxEnabled: true
+                  initialSize: 5
+                  maxActive: 50
+                  minIdle: 5
+                  maxIdle: 25
+                  maxWait: 10000
+                  maxAge: 600000
+                  validationQuery: SELECT 1
+                  validationQueryTimeout: 3
+                  validationInterval: 15000
+                  defaultTransactionIsolation: 1
+                  dbProperties:
+                        autoReconnect: true
+
+grails:
+    mail:
+        host: "smtp.outlook.com" #########################################
+        port: 587 ##########################################################
+        username: "do-not-reply@domain.com" ################################
+        password: "SMTPaccoutnPassword123" #################################
+    assessorService:
+        active: true
+        url: 'http://localhost:2222'
+        ignoreSslCertErrors: true
+            
+    plugin:
+        springsecurity:
+            providerNames: ['ldapAuthProvider','rememberMeAuthenticationProvider','restAuthenticationProvider','anonymousAuthenticationProvider']
+            ldap:
+                active: true
+                context:
+                    managerDn: 'cn=LDAP Admin,ou=Admin Accounts,dc=Domain,dc=Com' ###########################
+                    managerPassword: 'LDAPqueryPassword123' #################################################
+                    server: 'ldaps://dc01.domain.com:636' ###################################################
+                authorities:
+                    ignorePartialResultException: true
+                    retrieveDatabaseRoles: false                   
+                    retrieveGroupRoles: true
+                    groupSearchBase: 'ou=Groups,dc=domain,dc=com'  ###########################################               
+                    groupSearchFilter: 'member={0}' ##########################################################
+                    groupRoleAttribute: 'cn'       ###########################################################  
+                    clean:
+                        prefix: 'CCPD_' ######################################################################
+                search:
+                    base: 'dc=domain,dc=com'  ################################################################
+                    filter: 'sAMAccountName={0}'
+                auth:
+                    hideUserNotFoundExceptions: false
+                authenticator:
+                    passwordAttributeName: 'userPassword'
+                mapper:
+                    passwordAttributeName: 'userPassword'               
+                useRememberMe: true  
+            rememberMe:
+                persistent: true
+
+database: SQLServer
