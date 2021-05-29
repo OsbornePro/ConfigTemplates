@@ -36,7 +36,7 @@ info@osbornepro.com
 "@
 $Logo
 
-Write-Output "BEGINING EXECUTION OF SCRIPT TO HARDED A WINDOWS 10 MACHINE THAT IS NOT JOINED TO A DOMAIN"
+Write-Output "BEGINING EXECUTION OF SCRIPT TO HARDEN A WINDOWS 10 MACHINE NOT JOINED TO A DOMAIN"
 
 # WDIGEST CACHE
 Write-Output "[*] Disabling WDigest credentials caching. More info here: https://www.stigviewer.com/stig/windows_10/2017-02-21/finding/V-71763"
@@ -77,7 +77,7 @@ If (((Get-ItemProperty "HKLM:\Software\Policies\Microsoft\Windows\Installer").Al
 {
 
     Write-Output "[*] Device is vulnerable to AlwaysInstallElevated priviliege escalation. Mitigating threat. Read more here if desired: https://docs.microsoft.com/en-us/windows/win32/msi/alwaysinstallelevated"
-    Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Insatller" -Name "AlwaysInstallElevated" -Value 0 -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Installer" -Name "AlwaysInstallElevated" -Value 0
     Set-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\Installer" -Name "AlwaysInstallElevated" -Value 0
 
 }  # End If
@@ -106,9 +106,9 @@ Else
 
 # SSDP
 Write-Output "[*] Disabling the SSDP Service"
-Stop-Service -Name SSDPSRV -Force -ErrorAction SilentlyContinue
-Set-Service -Name SSDPSRV -StartupType Disabled
-
+Stop-Service -Name "SSDPSRV" -Force -ErrorAction SilentlyContinue
+Set-Service -Name "SSDPSRV" -StartupType Disabled
+Disable-NetFirewallRule -DisplayName "Network Discovery*"
 
 # SMB
 Write-Output '[*] Disabling SMB version 1'
@@ -123,6 +123,10 @@ New-Item -Path "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanWorkS
 New-Item -Path "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name RequireSecuritySignature -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null
 New-Item -Path "HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanServer\Parameters" -Name EnableSecuritySignature -Value 1 -Force -ErrorAction SilentlyContinue | Out-Null
 
+Write-Output "[*] Blocking a few common ports attackers may use with reverse shells."
+New-NetFirewallRule -DisplayName "Disallow Common Ports That Attackers Use" -Direction "Outbound" -LocalPort 1336,1337,1338,1339,4444,4445,4446,4447,4448,4449 -Protocol "TCP" -Action Block
+New-NetFirewallRule -DisplayName "Disallow Common Ports That Attackers Use" -Direction "Outbound" -LocalPort 1336,1337,1338,1339,4444,4445,4446,4447,4448,4449 -Protocol "UDP" -Action Block
+
 
 # DNS
 Write-Output "[*] Enabling DNS over HTTPS for all Windows applications"
@@ -132,8 +136,8 @@ Write-Output "[*] Disable the use of the LMHOSTS File"
 Invoke-CimMethod -Namespace root/CIMV2 -ClassName Win32_NetworkAdapterConfiguration -MethodName EnableWINS -Arguments @{ DNSEnabledForWINSResolution = $False; WINSEnableLMHostsLookup = $False }
 
 Write-Output "[*] Disabling the use of NetBIOS"
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\services\NetBT\Parameters\Interfaces\tcpip*" -Name NetbiosOptions -Value 2
-
+$CIMInstance = Get-CimInstance -Namespace "root/CIMV2" -ClassName "Win32_NetworkAdapterConfiguration"
+$CIMInstance | Invoke-CimMethod -MethodName SetTcpipNetbios -Arguments @{TcpipNetbiosOptions=2} | Out-Null
 
 # RDP
 Write-Output "[*] Disabling Remote Assistance"
@@ -370,8 +374,8 @@ setx /m mp_force_use_sandbox 1
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUwIIRBFNZ4xBZo9TI/9PZz2El
-# QU6gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUJodL1VJjQsyWNULdhinhQOEN
+# 2iWgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -431,11 +435,11 @@ setx /m mp_force_use_sandbox 1
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FEHj62tC6NpIMtdbqEPxIVDQLsuuMA0GCSqGSIb3DQEBAQUABIIBAMJlAKJLHvyr
-# Nkz888jSieFGq8cD8Tb+MGv1NH8upX8Q1KWxuvspV+7QYjSXJn4KP3OE6JXF33P4
-# aPnCarfVAU/qSwouoEX4OctlDPPvSXmd3nb4B2HJKv1EapcLLWAHuTMmYMks9ZDn
-# vxeoagqt+p9jE+CNuhDNMVqTIeKDh6jChbD9CbimDRCpIcq+eUY2cJMlqVV/V/Rk
-# olAtfpdpqASiUKpfa6mR/Vscftw3Xn//6fJ9ZERxe1RuLZgPayCXPU8TS/jD08ed
-# b9XSr6wVTJ1GYrNxQtfIHzwqeL1Zq7ah+RRBwYSto2Vozv4fIFHXEP9dOdYvWhqs
-# kr8js807sW8=
+# FM6vpvz1Yrng0bWjCbF2+x/bhZPtMA0GCSqGSIb3DQEBAQUABIIBABI1+ZGje5JL
+# JISyoN5SBhur03LZWEpBGBJvB3RlOfuv9BZ/6DQUyzAgAUmBdft+eTK79P7ohbnY
+# E/zuxzFG8CDsS5BbVrAO/cIt1fFMaLfGjjdMGe8FZyFquAF5gHtwWNhUlyFXWtvI
+# yj16rus99ILgEINAi2HH5vsRvz8nCIBeKIs8Q5YfizFexsqVNr/lk9JtR5m5mykz
+# vfcgDLKO88TS18RKjXOFGwFfT7HEUcm9OBnuAsDFhkXchxlFp1sL8BZViSlr8qkL
+# P807jHvSTNl54eaLZYegkOJ5s9sdefMyV7Hl8Y83AwFfqecFo9nCebECkkJUzxqt
+# mBMUaX98LA8=
 # SIG # End signature block
