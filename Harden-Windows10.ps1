@@ -318,10 +318,32 @@ If ($PSVersionTable.PSVersion.Major -lt 5)
 }  # End If
 
 Write-Output "[*] Enabling Command Line Logging"
-New-Item -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit" -Name "ProcessCreationIncludeCmdLine_Enabled" -Value 1
+New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System\Audit" -Name "ProcessCreationIncludeCmdLine_Enabled" -Value 1
 
-Write-Output "[*] Scripts already exist to enable suggested logging requirements to discover malware and threat activity."
-Write-Output "[*] I suggest using https://www.malwarearchaeology.com/s/Set_Adv_Auditing_Folders_Keys_vDec_2018-fa6n.zip"
+Write-Output "[*] Ensure PowerShell versions 4 and 5 are collecting logs"
+New-Item -Path "HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ModuleLogging" -Force
+New-Item -Path "HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Force
+New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ModuleLogging" -Name "EnableModuleLogging" -Value 1 -Force
+New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging" -Name "EnableScriptBlockLogging" -Value 1 -Force
+
+Write-Output "[*] Defining the max log file sizes"
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Security" -Name "MaxSize" -Value 524288000 -Force
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Windows PowerShell" -Name "MaxSize" -Value 262144000 -Force
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-PowerShell/Operational" -Name "MaxSize" -Value 524288000 -Force
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\System" -Name "MaxSize" -Value 262144000 -Force
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Application" -Name "MaxSize" -Value 262144000 -Force
+
+Write-Output "[*] Enable applying the Advanced Audit Policies"
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "SCENoApplyLegacyAuditPolicy" -Value 1
+
+Write-Output "[*] Enable Task Scheduler Logging"
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-TaskScheduler/Operational" -Name "Enabled" -Value 1 -Force
+
+Write-Output "[*] Enabling DNS Logging"
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-DNS-Client/Operational" -Name "Enabled" -Value 1 -Force
+
+Write-Output "[*] Enabling USB logging"
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\Microsoft-Windows-DriverFrameworks-UserMode/Operational" -Name "Enabled" -Value 1 -Force
 
 # ENABLE DATA EXECUTION PREVENTION (DEP)
 Write-Output "[*] Enabling Data Execution Prevention (DEP)"
@@ -348,8 +370,8 @@ setx /m mp_force_use_sandbox 1
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQULxkpx0SlxjAxRmd9U2xY1IdS
-# +UWgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUwIIRBFNZ4xBZo9TI/9PZz2El
+# QU6gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -409,11 +431,11 @@ setx /m mp_force_use_sandbox 1
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FK8UKCTZu6rRf6rDhUJof4fJb9JqMA0GCSqGSIb3DQEBAQUABIIBALvy63Qzvuls
-# ojAFk02+uqLuM2af9M04gjxJ5ChwRjgNq305rA3pYnZJqrgayOWLVTCW+tWAm10S
-# 6wtP5SMRvs9Myub2eojOZEjqmN6kPvaN49qq1zkMyfPO83s1G9BeBFmfy9tpOUqx
-# kb6iP+4cyhTLx1OeipzYgHus5Y56GDGCEzIu30LKgHxlaZcdlGeqAlmvJlQTwM5C
-# 2IqLsUXzjDTyygySfyvvEuiICmSoSMeDJSDoms/5t1oiYaz6y3pm5OFRX67mJEsz
-# gVJiEMQSKNMletSKC61e93q1JAAVZvZZ2DfyFcp1CVUQrYd36mfREUYTN7MoGhWS
-# Fh9vp3UQI+k=
+# FEHj62tC6NpIMtdbqEPxIVDQLsuuMA0GCSqGSIb3DQEBAQUABIIBAMJlAKJLHvyr
+# Nkz888jSieFGq8cD8Tb+MGv1NH8upX8Q1KWxuvspV+7QYjSXJn4KP3OE6JXF33P4
+# aPnCarfVAU/qSwouoEX4OctlDPPvSXmd3nb4B2HJKv1EapcLLWAHuTMmYMks9ZDn
+# vxeoagqt+p9jE+CNuhDNMVqTIeKDh6jChbD9CbimDRCpIcq+eUY2cJMlqVV/V/Rk
+# olAtfpdpqASiUKpfa6mR/Vscftw3Xn//6fJ9ZERxe1RuLZgPayCXPU8TS/jD08ed
+# b9XSr6wVTJ1GYrNxQtfIHzwqeL1Zq7ah+RRBwYSto2Vozv4fIFHXEP9dOdYvWhqs
+# kr8js807sW8=
 # SIG # End signature block
