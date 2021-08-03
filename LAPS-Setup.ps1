@@ -40,6 +40,9 @@ If (!($Member)) {
 
 }  # End If
 
+Write-Output "[*] Updating AD Schema. You may need to restart before this works for the new permissions to apply to your current user"
+Update-AdmPwdADSchema
+
 
 Write-Output "[*] Below is a list of current LAPS extended rights permissions"
 Try { Find-AdmPwdExtendedRights -Identity "*" } Catch { Write-Verbose "This is here to prevent the error message expected from showing up"}
@@ -80,8 +83,8 @@ Write-Output "[*] You have now updated the Active Directory Schema for LAPS and 
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQULIf9GXAaZJnWYgVt31NrmulD
-# Xtqgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUshMcxHHFvBGdCWjf6kKIon6a
+# n5igggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -141,11 +144,11 @@ Write-Output "[*] You have now updated the Active Directory Schema for LAPS and 
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FIjiP2PNXGWuDIGVPK28iRyyUH6WMA0GCSqGSIb3DQEBAQUABIIBAEu1L2Te68Pz
-# po31iWShwQqkiUYtpcBKxpBSwwh42927LumvMFEPlBbIgnpkIu0ux+Cb0bvGyA3B
-# f+OBJVH7efwB8M513kXGNpQTZ+SCmpur3GcWnFWY3PI+Smsm/8RZ9nxFOUUNyIgi
-# NHHGhwJoArRaC/eArqaBDaKVW+fmd1lX0+1dKPwVndYrG1jzdLQYLcKtpW2azD0p
-# AVkgqOR3yGgP6R15+9h57+I5dWHFRrFsJSU4suyKSrU8PhXbobiMyB1s+DOd1AiK
-# WvppcG4vJ4aGwmyk5vsS0eiMbN4f14xGcyxYqqn6/+NrfnpYoC4q+oMfiwdbBOF8
-# dSqtiSpnwA4=
+# FKWtFFriaQmPa7DdnYKmfBwSR4CJMA0GCSqGSIb3DQEBAQUABIIBAI+bTxN/dJGT
+# tphu5cJ+9HXRU3GrwUS0bNreyCq4R5iyOtIdJ8FIWC7uG5KrzhC3t0+A52g0pVUU
+# QP9QxNaOMpIwh1+J3FV2+LR3t1Qr7bqcrsvGseXGjuGl5NAih5awM+Lw/P8Byb0O
+# 5LJvPjEIjNV7VOMzUsIMjYzmNNgKnuIKByOmnwKkMvDgskFRK3T6y1hULy+5yjPK
+# 72zWwPGlFeo6mbQf1lUBVMqwAyyclwPd0D1jlyc3zj77puGZCqv6shs8jGvnfy3n
+# zJW6870S+Dh5TYsq/kRZEwGWLVthkp8nIstVL2qqvO+k7lgq8+4GzzQPQaiTsbFj
+# 5+lAxu5UnGg=
 # SIG # End signature block
