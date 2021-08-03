@@ -68,6 +68,103 @@ Do {
 $Answer2 = Read-Host -Prompt "Would you like to set up backups of LAPS password history? This will not exist otherwise [y/N]"
 If ($Answer2 -like "*y*") {
 
+    Function Set-SecureFilePermissions {
+        [CmdletBinding()]
+            param(
+                [Parameter(
+                    Mandatory=$True,
+                    ValueFromPipeline=$False,
+                    HelpMessage="`n[H] Add a user or list of users who should have permisssions to an NTFS file`n[E] EXAMPLE: 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators', 'BUILTIN\Network Configuration Operators', 'NT SERVICE\MpsSvc'")]  # End Parameter
+                [Alias('User')]
+                [String[]]$Username,
+
+                [Parameter(
+                    Mandatory=$True,
+                    ValueFromPipeline=$True,
+                    ValueFromPipelineByPropertyName=$False,
+                    HelpMessage="`n[H] Define the path to the NTFS item you want to modify the entire permissions on `n[E] EXAMPLE: C:\Temp\file.txt")]  # End Parameter
+                [String[]]$Path,
+
+                [Parameter(
+                    Mandatory=$False,
+                    ValueFromPipeline=$False)]
+                [String]$Owner = 'BUILTIN\Administrators',
+
+                [Parameter(
+                    Mandatory=$False,
+                    ValueFromPipeline=$False)]  # End Parameter
+                [Alias('cn')]
+                [String[]]$ComputerName = $env:COMPUTERNAME)  # End param
+
+
+        If ($ComputerName -eq $env:COMPUTERNAME)
+        {
+
+            Write-Verbose "Modifying access rule proteciton"
+
+            $Acl = Get-Acl -Path "$Path"
+            $Acl.SetAccessRuleProtection($True, $False)
+
+            ForEach ($U in $Username)
+            {
+
+                Write-Verbose "Adding $U permissions for $Path"
+
+                $Permission = $U, 'FullControl', 'Allow'
+                $AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $Permission
+
+                $Acl.AddAccessRule($AccessRule)
+
+            }  # End ForEach
+
+            Write-Verbose "Changing the owner of $Path to $Owner"
+
+            $Acl.SetOwner((New-Object -TypeName System.Security.Principal.NTAccount("$Owner")))
+            $Acl | Set-Acl -Path "$Path"
+
+        }  # End If
+        Else
+        {
+
+            ForEach ($C in $ComputerName)
+            {
+
+                Invoke-Command -ArgumentList $Username,$Path,$Owner -HideComputerName "$C.$env:USERDNSDOMAIN" -UseSSL -Port 5986 -ScriptBlock {
+
+                    $Username = $Args[0]
+                    $Path = $Args[1]
+                    $Owner = $Args[2]
+
+                    Write-Verbose "Modifying access rule proteciton"
+
+                    $Acl = Get-Acl -Path "$Path"
+                    $Acl.SetAccessRuleProtection($True, $False)
+
+                    ForEach ($U in $Username)
+                    {
+
+                        Write-Verbose "Adding $U permissions for $Path"
+
+                        $Permission = $U, 'FullControl', 'Allow'
+                        $AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $Permission
+
+                        $Acl.AddAccessRule($AccessRule)
+
+                    }  # End ForEach
+
+                    Write-Verbose "Changing the owner of $Path to $Owner"
+
+                    $Acl.SetOwner((New-Object -TypeName System.Security.Principal.NTAccount("$Owner")))
+                    $Acl | Set-Acl -Path "$Path"
+
+                }  # End Invoke-Command
+
+            }  # End ForEach
+
+        }  # End Else
+
+    }  # End Function Set-SecureFilePermissions
+
     Write-Output "[*] Downloading LAPS backup script and task file"
     (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.ps1", "C:\Users\Public\Documents\BackupLAPS.ps1")
     (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.xml", "C:\Users\Public\Documents\BackupLAPS.xml")
@@ -76,6 +173,8 @@ If ($Answer2 -like "*y*") {
     $Xml = Get-Content -Path "C:\Users\Public\Documents\BackupLAPS.xml" | Out-String
     Register-ScheduledTask -Xml $Xml -TaskName "Backup LAPS" -TaskPath "\" -User "SYSTEM" –Force
 
+    Set-SecureFilePermissions -Username 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators' -Path C:\DB -Owner 'BUILTIN\SYSTEM'
+
 }  # End If
 
 Write-Output "[*] You have now updated the Active Directory Schema for LAPS and allowed devices to set their own AD Attribute 'ms-Mcs-AdmPwd' for updating passwords."
@@ -83,8 +182,8 @@ Write-Output "[*] You have now updated the Active Directory Schema for LAPS and 
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUshMcxHHFvBGdCWjf6kKIon6a
-# n5igggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUCn+J/HVomfwhw1aku62wiS4+
+# 0/agggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -144,11 +243,11 @@ Write-Output "[*] You have now updated the Active Directory Schema for LAPS and 
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FKWtFFriaQmPa7DdnYKmfBwSR4CJMA0GCSqGSIb3DQEBAQUABIIBAI+bTxN/dJGT
-# tphu5cJ+9HXRU3GrwUS0bNreyCq4R5iyOtIdJ8FIWC7uG5KrzhC3t0+A52g0pVUU
-# QP9QxNaOMpIwh1+J3FV2+LR3t1Qr7bqcrsvGseXGjuGl5NAih5awM+Lw/P8Byb0O
-# 5LJvPjEIjNV7VOMzUsIMjYzmNNgKnuIKByOmnwKkMvDgskFRK3T6y1hULy+5yjPK
-# 72zWwPGlFeo6mbQf1lUBVMqwAyyclwPd0D1jlyc3zj77puGZCqv6shs8jGvnfy3n
-# zJW6870S+Dh5TYsq/kRZEwGWLVthkp8nIstVL2qqvO+k7lgq8+4GzzQPQaiTsbFj
-# 5+lAxu5UnGg=
+# FJAmj/5dVyvTK5a1jiPwUK0wLXwgMA0GCSqGSIb3DQEBAQUABIIBACVZDAX/qarj
+# QYVJX7ruBZ4AODEHBmN9D/z02qjJ9gCurpnZP1u+BbHriwHPaIqfJARWgEcg9i2Q
+# PBwVCgB1daHzI59xdJgRuXHSyDpXNNFy3pcDpwgs9oyrOtFWmDz2NfpLGjr0jCuz
+# fuZqNA9e54CwCw/5K/OSBRaDh8c3IIu/DvBNPv2jTKDMNOfolf2i5J3AhOilyZte
+# iTPO2UfZC0vG60ujoybpwLiBd2l3ThDg/fPAwGGKgQIdvCsRP5upU/1d3HXcCMKG
+# 1U/rvKwhiWsxbFGp9q8jn4VDU5k9Eru4uzZ92lgk1IK7NHrechF0egIaf80GTBO+
+# 3R7AXAvoghk=
 # SIG # End signature block
