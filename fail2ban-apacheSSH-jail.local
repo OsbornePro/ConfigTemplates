@@ -60,6 +60,7 @@ destemail = youremail@domain.com
 #########################################
 # Prevent excess login attempts
 [sshd]
+filter = sshd
 enabled = true
 port    = 22
 bantime = 1800
