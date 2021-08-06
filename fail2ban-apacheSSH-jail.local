@@ -12,7 +12,7 @@ filter   = apache-auth
 logpath  = /var/log/apache*/*error.log
 maxretry = 4
 bantime  = 3600
-destemail = rosborne@osbornepro.com
+destemail = youremail@domain.com
 
 # detect spammer robots crawling email addresses
 [apache-badbots]
@@ -23,7 +23,7 @@ action   = iptables-multiport[name=badbots, port="8080,4443"]
 logpath  = /var/log/apache*/*error.log
 bantime  = 3600
 maxretry = 1
-destemail = rosborne@osbornepro.com
+destemail = youremail@domain.com
 
 # detect potential search for exploits and php vulnerabilities
 [apache-noscript]
@@ -33,7 +33,7 @@ filter   = apache-noscript
 logpath  = /var/log/apache*/*error.log
 maxretry = 5
 bantime  = 3600
-destemail = rosborne@osbornepro.com
+destemail = youremail@domain.com
 
 # detect Apache overflow attempts
 [apache-overflows]
@@ -43,7 +43,7 @@ filter   = apache-overflows
 logpath  = /var/log/apache*/*error.log
 maxretry = 2
 bantime  = 3600
-destemail = rosborne@osbornepro.com
+destemail = youremail@domain.com
 
 # detect failures to find a home directory on a server
 [apache-nohome]
@@ -53,7 +53,7 @@ filter   = apache-nohome
 logpath  = /var/log/apache*/*error.log
 maxretry = 2
 bantime  = 3600
-destemail = rosborne@osbornepro.com
+destemail = youremail@domain.com
 
 #########################################
 #                 SSH                   #
@@ -65,4 +65,4 @@ port    = 22
 bantime = 1800
 maxretry = 3
 banaction = iptables-allports
-destemail = rosborne@osbornepro.com
+destemail = youremail@domain.com
