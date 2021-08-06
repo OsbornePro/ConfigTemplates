@@ -1,0 +1,68 @@
+# OsbornePro LLC. Fail2ban template for using fail2ban to help protect Apache and SSH
+# This file is typically located at /etc/fail2ban/jail.local
+
+#########################################
+#               APACHE                  #
+#########################################
+# detect password authentication failures
+[apache]
+enabled  = true
+port     = 8080,4443
+filter   = apache-auth
+logpath  = /var/log/apache*/*error.log
+maxretry = 4
+bantime  = 3600
+destemail = rosborne@osbornepro.com
+
+# detect spammer robots crawling email addresses
+[apache-badbots]
+enabled  = true
+port     = 8080,4443
+filter   = apache-badbots
+action   = iptables-multiport[name=badbots, port="8080,4443"]
+logpath  = /var/log/apache*/*error.log
+bantime  = 3600
+maxretry = 1
+destemail = rosborne@osbornepro.com
+
+# detect potential search for exploits and php vulnerabilities
+[apache-noscript]
+enabled  = true
+port     = 8080,4443
+filter   = apache-noscript
+logpath  = /var/log/apache*/*error.log
+maxretry = 5
+bantime  = 3600
+destemail = rosborne@osbornepro.com
+
+# detect Apache overflow attempts
+[apache-overflows]
+enabled  = true
+port     = 8080,4443
+filter   = apache-overflows
+logpath  = /var/log/apache*/*error.log
+maxretry = 2
+bantime  = 3600
+destemail = rosborne@osbornepro.com
+
+# detect failures to find a home directory on a server
+[apache-nohome]
+enabled  = true
+port     = 8080,4443
+filter   = apache-nohome
+logpath  = /var/log/apache*/*error.log
+maxretry = 2
+bantime  = 3600
+destemail = rosborne@osbornepro.com
+
+#########################################
+#                 SSH                   #
+#########################################
+# Prevent excess login attempts
+[sshd]
+enabled = true
+port    = 22
+bantime = 1800
+maxretry = 3
+banaction = iptables-allports
+destemail = rosborne@osbornepro.com
