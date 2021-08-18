@@ -9,22 +9,22 @@
 # EXAMPLE CONTENTS OF /etc/mailname
 # cat /etc/mailname
 # osbornepro.com
-myorigin = /etc/mailname
+myorigin=/etc/mailname
 
 smtpd_banner = $myhostname ESMTP $mail_name Company LLC.
-biff = no
+biff=no
 
 # appending .domain is the MUA's job.
-append_dot_mydomain = no
+append_dot_mydomain=no
 
 # Uncomment the next line to generate "delayed mail" warnings
-#delay_warning_time = 4h
+#delay_warning_time=4h
 
-readme_directory = no
+readme_directory=no
 
 # See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
 # fresh installs.
-compatibility_level = 2
+compatibility_level=2
 
 #========================================================
 # Use SASL Authentication
@@ -40,8 +40,8 @@ smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
 
 
 relayhost = [mail.smtp2go.com]:2525
-relay_destination_concurrency_limit = 20
-header_size_limit = 4096000
+relay_destination_concurrency_limit=20
+header_size_limit=4096000
 
 
 #=================================================================
@@ -52,22 +52,28 @@ smtp_tls_security_level = encrypt
 # may     : Postfix SMTP server announces STARTTLS support to remote SMTP clients, but does not require that clients use TLS encryption
 # encrypt : Postfix SMTP server announces STARTTLS and accepts no mail without TLS encryption. 
 # According to RFC 2487 'encrypt' MUST NOT be applied in case of a publicly-referenced Postfix SMTP server. This option is off by default and should only seldom be used. 
-# Fine to set to encrypt if you are using this for email alerts for yourself
+# Fine to set to encrypt if you are using this for email alerts to yourself
 
-smtpd_tls_auth_only = yes
+smtpd_tls_auth_only=yes
+
+# You can use snake-oil certificates
+smtp_tls_CApath=/etc/ssl/certs
+smtpd_tls_CApath=/etc/ssl/certs
 smtpd_tls_CAfile=/etc/ssl/certs/ssl-cert-snakeoil.pem
 smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+
 # Only 1 certificate can be managed so it should be issued on your own hostname. 
 # No default is supplied (no certificate is presented), unless you explicitly set the certificate in the configuration. 
 # You can use the same certificate as for the server side
 #
 smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
 # chown root etc/ssl/private/ssl-cert-snakeoil.key ; chmod 400 etc/ssl/private/ssl-cert-snakeoil.key
-tls_ssl_options = NO_COMPRESSION
+
+tls_ssl_options=NO_COMPRESSION
 smtpd_use_tls=yes
-smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
-smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
-smtpd_tls_mandatory_ciphers = high 
+smtpd_tls_mandatory_protocols=!SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtpd_tls_protocols=!SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtpd_tls_mandatory_ciphers=high 
 # or medium if you prefer
 #
 # If clients are expected to always verify the Postfix SMTP server certificate you may want to disable anonymous 
@@ -87,9 +93,9 @@ smtpd_tls_received_header=yes
 #============================================================
 # Diffie Hellman File
 #============================================================
-smtpd_tls_dh2048_param_file = /etc/ssl/certs/postfix-dh2048.pem
+smtpd_tls_dh2048_param_file=/etc/ssl/certs/postfix-dh2048.pem
 # OR
-# smtpd_tls_dh1024_param_file = /etc/ssl/certs/postfix-dh1024.pem
+# smtpd_tls_dh1024_param_file=/etc/ssl/certs/postfix-dh1024.pem
 #
 # sudo umask 022
 # sudo openssl dhparam -out /etc/ssl/certs/postfix-dh512.tmp 512 && mv /etc/ssl/certs/postfix-dh512.tmp /etc/ssl/certs/postfix-dh512.pem
@@ -105,20 +111,26 @@ smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 # CIPHERS
 #======================================================
 # MEDIUM CIPHERS
-# tls_medium_cipherlist = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#tls_medium_cipherlist = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+#
 # CBC is no longer considered a strong block chain method
 #
 # Get value of tls_medium_cipherlist
 # postconf -d | grep tls_medium_cipherlist
+#
 # # View available ciphers based on the selections
 # openssl ciphers -v 'aNULL:-aNULL:HIGH:MEDIUM:+RC4:@STRENGTH' | awk '{printf "%-32s %s\n", $1, $3}'
-#
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # HIGH CIPHERS
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++
 tls_high_cipherlist=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:-DES:!RC4:!MD5:!PSK:!aECDH:EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+#
 # CBC is no longer considered a strong block chain method
 #
 # Get value of tls_high_cipherlist
 # postconf -d | grep tls_high_cipherlist
+#
 # View available ciphers based on your selections
 # openssl ciphers -v 'aNULL:-aNULL:HIGH:@STRENGTH' | awk '{printf "%-32s %s\n", $1, $3}'
 tls_preempt_cipherlist = no
