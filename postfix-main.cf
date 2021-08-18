@@ -48,10 +48,11 @@ header_size_limit = 4096000
 # TLS parameters
 #=================================================================
 # Enable TLS when SMTP is sending mail. Using ```yes``` may prevent deliverabiltiy to gmails
-smtp_tls_security_level = may
+smtp_tls_security_level = encrypt
 # may     : Postfix SMTP server announces STARTTLS support to remote SMTP clients, but does not require that clients use TLS encryption
 # encrypt : Postfix SMTP server announces STARTTLS and accepts no mail without TLS encryption. 
 # According to RFC 2487 'encrypt' MUST NOT be applied in case of a publicly-referenced Postfix SMTP server. This option is off by default and should only seldom be used. 
+# Fine to set to encrypt if you are using this for email alerts for yourself
 
 smtpd_tls_auth_only = yes
 smtpd_tls_CAfile=/etc/ssl/certs/ssl-cert-snakeoil.pem
