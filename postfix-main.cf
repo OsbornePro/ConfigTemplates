@@ -1,0 +1,154 @@
+# OsbornePro LLC. Template for configuring Postfix
+
+# You can start your configuration over with ```dpkg-reconfigure postfix```
+#
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+# Debian specific:  Specifying a file name will cause the first
+# line of that file to be used as the name.  The Debian default
+# is /etc/mailname. This should be your domain. An example of the contents 
+# EXAMPLE CONTENTS OF /etc/mailname
+# cat /etc/mailname
+# osbornepro.com
+myorigin = /etc/mailname
+
+smtpd_banner = $myhostname ESMTP $mail_name Company LLC.
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+
+readme_directory = no
+
+# See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
+# fresh installs.
+compatibility_level = 2
+
+#========================================================
+# Use SASL Authentication
+#========================================================
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options = noanonymous
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+# cat /etc/postfix/sasl_passwd
+# [mail.smtp2go.com]:2525 rosborne@osbornepro.com:P@ssw0rd123!
+# ls -la /etc/postfix/sasl_passwd
+# -rw------- 1 root root 99 Month ##  #### /etc/postfix/sasl_passwd 
+#----------------------------------------------------------
+
+
+relayhost = [mail.smtp2go.com]:2525
+relay_destination_concurrency_limit = 20
+header_size_limit = 4096000
+
+
+#=================================================================
+# TLS parameters
+#=================================================================
+# Enable TLS when SMTP is sending mail. Using ```yes``` may prevent deliverabiltiy to gmails
+smtp_tls_security_level = may
+# may     : Postfix SMTP server announces STARTTLS support to remote SMTP clients, but does not require that clients use TLS encryption
+# encrypt : Postfix SMTP server announces STARTTLS and accepts no mail without TLS encryption. 
+# According to RFC 2487 'encrypt' MUST NOT be applied in case of a publicly-referenced Postfix SMTP server. This option is off by default and should only seldom be used. 
+
+smtpd_tls_auth_only = yes
+smtpd_tls_CAfile=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+# Only 1 certificate can be managed so it should be issued on your own hostname. 
+# No default is supplied (no certificate is presented), unless you explicitly set the certificate in the configuration. 
+# You can use the same certificate as for the server side
+#
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+# chown root etc/ssl/private/ssl-cert-snakeoil.key ; chmod 400 etc/ssl/private/ssl-cert-snakeoil.key
+tls_ssl_options = NO_COMPRESSION
+smtpd_use_tls=yes
+smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtpd_tls_mandatory_ciphers = high 
+# or medium if you prefer
+#
+# If clients are expected to always verify the Postfix SMTP server certificate you may want to disable anonymous 
+# ciphers by setting "smtpd_tls_mandatory_exclude_ciphers = aNULL" or "smtpd_tls_exclude_ciphers = aNULL", as appropriate. 
+# One can't force a remote SMTP client to check the server certificate so excluding anonymous ciphers is generally unnecessary
+smtpd_tls_mandatory_exclude_ciphers=aNULL
+smtpd_tls_exclude_ciphers=aNULL
+
+# Logging Postfix can be configured to report information about the negotiated cipher, the corresponding key lengths, 
+# and the remote peer certificate or public-key verification status
+smtp_tls_loglevel=1
+smtpd_tls_loglevel=1
+smtpd_tls_received_header=yes
+#-----------------------------------------------------------------
+
+
+#============================================================
+# Diffie Hellman File
+#============================================================
+smtpd_tls_dh2048_param_file = /etc/ssl/certs/postfix-dh2048.pem
+# OR
+# smtpd_tls_dh1024_param_file = /etc/ssl/certs/postfix-dh1024.pem
+#
+# sudo umask 022
+# sudo openssl dhparam -out /etc/ssl/certs/postfix-dh512.tmp 512 && mv /etc/ssl/certs/postfix-dh512.tmp /etc/ssl/certs/postfix-dh512.pem
+# sudo openssl dhparam -out /etc/ssl/certs/postfix-dh1024.tmp 1024 && mv /etc/ssl/certs/postfix-dh1024.tmp /etc/ssl/certs/postfix-dh1024.pem
+# sudo openssl dhparam -out /etc/ssl/certs/postfix-dh2048.tmp 2048 && mv /etc/ssl/certs/postfix-dh2048.tmp /etc/ssl/certs/postfix-dh2048.pem
+# sudo chmod 644 /etc/ssl/certs/postfix-dh512.pem /etc/ssl/certs/postfix-dh1024.pem /etc/ssl/certs/postfix-dh2048.pem
+#-------------------------------------------------------------
+
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+#======================================================
+# CIPHERS
+#======================================================
+# MEDIUM CIPHERS
+# tls_medium_cipherlist = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+# CBC is no longer considered a strong block chain method
+#
+# Get value of tls_medium_cipherlist
+# postconf -d | grep tls_medium_cipherlist
+# # View available ciphers based on the selections
+# openssl ciphers -v 'aNULL:-aNULL:HIGH:MEDIUM:+RC4:@STRENGTH' | awk '{printf "%-32s %s\n", $1, $3}'
+#
+# HIGH CIPHERS
+tls_high_cipherlist=ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:-DES:!RC4:!MD5:!PSK:!aECDH:EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+# CBC is no longer considered a strong block chain method
+#
+# Get value of tls_high_cipherlist
+# postconf -d | grep tls_high_cipherlist
+# View available ciphers based on your selections
+# openssl ciphers -v 'aNULL:-aNULL:HIGH:@STRENGTH' | awk '{printf "%-32s %s\n", $1, $3}'
+tls_preempt_cipherlist = no
+
+# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+# information on enabling SSL in the smtp client.
+#----------------------------------------------------------------
+
+
+smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+myhostname = localhost
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+mydestination = localhost.$mydomain, localhost, $myhostname
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+inet_protocols = ipv4
+
+# Use your domain
+masquerade_domains = domain.com
+
+# Disable VRFY and EXPN on mailserver
+disable_vrfy_command=yes
+
+# Restart Postfix Service
+# sudo systemctl restart postfix
+
+# Send a test email using below command
+# echo -e "FROM: root\nTO: root\nSubject: Test email from the your device\n\nThis is a test email." | sendmail -t
+# Check the logs for email issues
+# tail /var/log/mail.err
+# tail /var/log/mail.log
