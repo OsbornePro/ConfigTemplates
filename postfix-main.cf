@@ -157,8 +157,8 @@ smtpd_delay_reject=yes
 
 
 #myhostname=localhost
-myhostname=legion.osbornepro.com
-mydomain=osbornepro.com
+myhostname=hostname.domain.com
+mydomain=domain.com
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 mydestination = localhost.$mydomain, localhost, $myhostname
