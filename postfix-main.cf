@@ -33,6 +33,7 @@ smtp_sasl_auth_enable = yes
 smtp_sasl_security_options = noanonymous
 smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
 # cat /etc/postfix/sasl_passwd
+# Create an optimized version of above file by doing ```postmap /etc/postfix/sasl_passwd```
 # [mail.smtp2go.com]:2525 rosborne@osbornepro.com:P@ssw0rd123!
 # ls -la /etc/postfix/sasl_passwd
 # -rw------- 1 root root 99 Month ##  #### /etc/postfix/sasl_passwd 
@@ -55,21 +56,19 @@ smtp_tls_security_level = encrypt
 # Fine to set to encrypt if you are using this for email alerts to yourself
 
 smtpd_tls_auth_only=yes
-
-# You can use snake-oil certificates
-smtp_tls_CApath=/etc/ssl/certs
-smtpd_tls_CApath=/etc/ssl/certs
-smtpd_tls_CAfile=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtp_tls_CApath = /etc/ssl/certs
+smtpd_tls_CApath = /etc/ssl/certs
+smtpd_tls_CAfile=/etc/ssl/certs/ca-certificates.crt
 smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-
 # Only 1 certificate can be managed so it should be issued on your own hostname. 
 # No default is supplied (no certificate is presented), unless you explicitly set the certificate in the configuration. 
 # You can use the same certificate as for the server side
 #
 smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
 # chown root etc/ssl/private/ssl-cert-snakeoil.key ; chmod 400 etc/ssl/private/ssl-cert-snakeoil.key
-
+#
 tls_ssl_options=NO_COMPRESSION
+smtp_use_tls=yes
 smtpd_use_tls=yes
 smtpd_tls_mandatory_protocols=!SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 smtpd_tls_protocols=!SSLv2, !SSLv3, !TLSv1, !TLSv1.1
@@ -93,9 +92,9 @@ smtpd_tls_received_header=yes
 #============================================================
 # Diffie Hellman File
 #============================================================
+smtpd_tls_dh1024_param_file=/etc/ssl/certs/postfix-dh1024.pem
+# OR If available this below will load instead
 smtpd_tls_dh2048_param_file=/etc/ssl/certs/postfix-dh2048.pem
-# OR
-# smtpd_tls_dh1024_param_file=/etc/ssl/certs/postfix-dh1024.pem
 #
 # sudo umask 022
 # sudo openssl dhparam -out /etc/ssl/certs/postfix-dh512.tmp 512 && mv /etc/ssl/certs/postfix-dh512.tmp /etc/ssl/certs/postfix-dh512.pem
@@ -139,23 +138,48 @@ tls_preempt_cipherlist = no
 # information on enabling SSL in the smtp client.
 #----------------------------------------------------------------
 
+# Header Checks
+#header_checks = pcre:/etc/postfix/header_checks
+mime_header_checks = regexp:/etc/postfix/mime_header_checks
+# Contents of /etc/postfix/mime_header_checks below
+/name=[^>]*\.(bat|com|exe|dll|vbs)/ REJECT
 
-smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-myhostname = localhost
+# Relay Restrictions
+smtpd_relay_restrictions=permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+smtpd_helo_restrictions=permit_mynetworks, permit_sasl_authenticated, reject_non_fqdn_helo_hostname, reject_invalid_helo_hostname, reject_non_fqdn_hostname, reject_invalid_hostname
+smtpd_sender_restrictions=permit_mynetworks,reject_rbl_client bl.spamcop.net,reject_rbl_client dsbl.dnsbl.net.au,reject_rbl_client xbl.spamhaus.org,reject_rbl_client sbl.spamhaus.org,reject_rbl_client dsn.rfc-ignorant.org,reject_rbl_client cbl.abuseat.org,reject_rbl_client dsn.rfc-ignorant.org,reject_unauth_destination,reject_invalid_hostname,reject_unauth_pipelining,reject_non_fqdn_sender,reject_unknown_sender_domain,reject_non_fqdn_recipient,reject_unknown_recipient_domain,permit
+smtpd_client_restrictions=permit_mynetworks, permit_sasl_authenticated, reject_unknown_client_hostname, reject_rbl_client cbl.abuseat.org, reject_rbl_client b.barracudacentral.org
+smtpd_recipient_restrictions=permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_unknown_recipient_domain, check_policy_service unix:private/policy-spf, check_policy_service inet:127.0.0.1:10023
+smtpd_relay_restrictions=permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+smtpd_delay_reject=yes
+# Above smtpd_recipient_restrictions check_policy_service inet:127.0.0.1:10023 requires
+# apt install -y postgrey
+
+
+#myhostname=localhost
+myhostname=legion.osbornepro.com
+mydomain=osbornepro.com
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 mydestination = localhost.$mydomain, localhost, $myhostname
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
 recipient_delimiter = +
-inet_interfaces = all
+#inet_interfaces = all
+inet_interfaces=loopback-only
 inet_protocols = ipv4
+
+# String RFC Envelopes
+strict_rfc821_envelopes=yes
 
 # Use your domain
 masquerade_domains = domain.com
 
 # Disable VRFY and EXPN on mailserver
 disable_vrfy_command=yes
+
+# Require helo
+smtpd_helo_required=yes
 
 # Restart Postfix Service
 # sudo systemctl restart postfix
@@ -165,3 +189,35 @@ disable_vrfy_command=yes
 # Check the logs for email issues
 # tail /var/log/mail.err
 # tail /var/log/mail.log
+
+
+#=======================================================
+# SPF Checks
+#=======================================================
+policy-spf_time_limit=3600s
+# Above requires you to install
+# apt install -y postfix-policyd-spf-perl postfix-policyd-spf-python
+#
+# SEE LINE 152 check_policy_service unix:private/policy-spf at the end of smtpd_recipient_restrictions
+# Then EDIT /etc/postfix/master.cf to include the below lines
+#policy-spf  unix  -       n       n       -       -       spawn
+#     user=nobody argv=/usr/bin/policyd-spf 
+#     user=nobody argv=/usr/sbin/postfix-policyd-spf-perl
+#--------------------------------------------------------
+
+
+#=========================================================
+# Postscreen protection
+#=========================================================
+postscreen_greet_action=enforce
+# Postscreen protections above require the /etc/postfix/master.cf options to be set
+# MASTER CF OPTIONS TO USE
+# COMMENT OUT BELOW LINE IN master.cf
+#smtp      inet  n       -       -       -       -       smtpd
+#          -o ...
+# UNCOMMENT THE BELOW LINES IN master.cf
+smtpd     pass  -       -       n       -       -       smtpd
+smtp      inet  n       -       n       -       1       postscreen
+tlsproxy  unix  -       -       n       -       0       tlsproxy
+dnsblog   unix  -       -       n       -       0       dnsblog
+#----------------------------------------------------------
