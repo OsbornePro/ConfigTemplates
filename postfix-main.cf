@@ -142,7 +142,7 @@ tls_preempt_cipherlist = no
 #header_checks = pcre:/etc/postfix/header_checks
 mime_header_checks = regexp:/etc/postfix/mime_header_checks
 # Contents of /etc/postfix/mime_header_checks below
-/name=[^>]*\.(bat|com|exe|dll|vbs)/ REJECT
+#/name=[^>]*\.(bat|com|exe|dll|vbs)/ REJECT
 
 # Relay Restrictions
 smtpd_relay_restrictions=permit_mynetworks permit_sasl_authenticated defer_unauth_destination
