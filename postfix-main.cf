@@ -216,8 +216,8 @@ postscreen_greet_action=enforce
 #smtp      inet  n       -       -       -       -       smtpd
 #          -o ...
 # UNCOMMENT THE BELOW LINES IN master.cf
-smtpd     pass  -       -       n       -       -       smtpd
-smtp      inet  n       -       n       -       1       postscreen
-tlsproxy  unix  -       -       n       -       0       tlsproxy
-dnsblog   unix  -       -       n       -       0       dnsblog
+#smtpd     pass  -       -       n       -       -       smtpd
+#smtp      inet  n       -       n       -       1       postscreen
+#tlsproxy  unix  -       -       n       -       0       tlsproxy
+#dnsblog   unix  -       -       n       -       0       dnsblog
 #----------------------------------------------------------
