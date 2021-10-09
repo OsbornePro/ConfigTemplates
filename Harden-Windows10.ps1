@@ -45,16 +45,14 @@ Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders
 
 # AUTOLOGIN PASSWORD
 $AutoLoginPassword = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" | Select-Object -Property "DefaultUserName","DefaultPassword"
-If (($AutoLoginPassword).DefaultPassword)
-{
+If (($AutoLoginPassword).DefaultPassword) {
 
     Write-Output "[!] Auto Login Credentials Found: "
     Write-Output " $AutoLoginPassword"
 
     Write-Output "[*] Sometimes it is required to allow a computer to auto logon. To secure the above password use this tool to ensure the password is hashed/obfuscated and not stored in clear text:  `nhttps://docs.microsoft.com/en-us/sysinternals/downloads/autologon"
     $Remediate = Read-Host -Prompt "Would you like to disable auto-logon? [y/N]"
-    If ($Remediate -like "y*")
-    {
+    If ($Remediate -like "y*") {
 
         $RegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"
 
@@ -65,24 +63,21 @@ If (($AutoLoginPassword).DefaultPassword)
     }  # End If
 
 }  # End If
-Else
-{
+Else {
 
     Write-Output "[*] Great work! You are not using auto-logon"
 
 }  # End Else
 
 # ALWAYS INSTALL ELEVATED
-If (((Get-ItemProperty "HKLM:\Software\Policies\Microsoft\Windows\Installer").AlwaysInstallElevated) -eq 1)
-{
+If (((Get-ItemProperty "HKLM:\Software\Policies\Microsoft\Windows\Installer").AlwaysInstallElevated) -eq 1) {
 
     Write-Output "[*] Device is vulnerable to AlwaysInstallElevated priviliege escalation. Mitigating threat. Read more here if desired: https://docs.microsoft.com/en-us/windows/win32/msi/alwaysinstallelevated"
     Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\Installer" -Name "AlwaysInstallElevated" -Value 0
     Set-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\Installer" -Name "AlwaysInstallElevated" -Value 0
 
 }  # End If
-Else
-{
+Else {
 
     Write-Output "[*] EXCELLENT: Target is not vulnerable to AlwaysInstallElevated PrivEsc method "
 
@@ -91,14 +86,12 @@ Else
 
 # WSUS
 Write-Output "[*] Checking for WSUS updates allowed over HTTP for PrivEsc"
-If (((Get-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "UseWUServer" -ErrorAction "SilentlyContinue") -eq 1) -and (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "WUServer" -ErrorAction "SilentlyContinue" -Contains "http://"))
-{
+If (((Get-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "UseWUServer" -ErrorAction "SilentlyContinue") -eq 1) -and (Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" -Name "WUServer" -ErrorAction "SilentlyContinue" -Contains "http://")) {
 
     Write-Output "[!] Target is vulnerable to HTTP WSUS updates. Configure your update server to use HTTPS only if you must have it custom defined. `n EXPLOIT: https://github.com/pimps/wsuxploit"
 
 }  # End If
-Else
-{
+Else {
 
     Write-Output "[*] $env:COMPUTERNAME is not vulnerable to WSUS using HTTP."
 
@@ -145,8 +138,7 @@ New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Remote Assistance" -Error
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Remote Assistance" -Name "fAllowToGetHelp" -Value 0
 
 $Answer3 = Read-Host -Prompt "Would you like to allow remote access to your computer? [y/N]"
-    If ($Answer3 -like "y*")
-    {
+    If ($Answer3 -like "y*") {
 
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
@@ -161,8 +153,7 @@ $Answer3 = Read-Host -Prompt "Would you like to allow remote access to your comp
         $TSGeneralSetting | Invoke-CimMethod -MethodName SetUserAuthenticationRequired -Arguments @{UserAuthenticationRequired=1}
 
     }  # End If
-    ElseIf ($Answer3 -like "n*")
-    {
+    ElseIf ($Answer3 -like "n*") {
 
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 1
         Disable-NetFirewallRule -DisplayGroup "Remote Desktop"
@@ -241,8 +232,7 @@ Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2
 # UNQUOTED SERVICE PATHS
 $UnquotedServicePaths = Get-CimInstance -ClassName "Win32_Service" -Property "Name","DisplayName","PathName","StartMode" | Where-Object { $_.StartMode -eq "Auto" -and $_.PathName -notlike "C:\Windows*" -and $_.PathName -notlike '"*' } | Select-Object -Property "PathName","DisplayName","Name"
 
-If ($UnquotedServicePaths)
-{
+If ($UnquotedServicePaths) {
 
     Write-Output "Unquoted Service Path(s) have been found"
 
@@ -250,8 +240,7 @@ If ($UnquotedServicePaths)
     Write-Output "[*] Modify the above registry values so double or single quotes surround the defined file path locations"
 
 }  # End If
-Else
-{
+Else {
 
     Write-Output "[*] $env:COMPUTERNAME does not contain any unquoted service paths"
 
@@ -263,14 +252,12 @@ Write-Output "[*] Enabling UAC on all processes that require elevation"
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 2
 
 Write-Output "[*] Checking if current user is a member of the local Administrators group"
-If ((Get-LocalGroupMember -Group "Administrators").Name -Contains "$env:COMPUTERNAME\$env:USERNAME")
-{
+If ((Get-LocalGroupMember -Group "Administrators").Name -Contains "$env:COMPUTERNAME\$env:USERNAME") {
 
     Write-Output "[*] It is considered best practice to log into Windows using a user account that does not have Administrative priviledge. If you wish to continue doing what you are doing it is not critical to adapt to this suggestion"
 
     $Answer1 = Read-Host -Prompt "Would you like to create a user account to sign into Windows with from now on and use the $env:USERNAME account and password whenever you need to elevate privilege? [y/N]"
-    If ($Answer1 -like "y*")
-    {
+    If ($Answer1 -like "y*") {
 
         $FullName = Read-Host -Prompt "What is the full name of the user who will use this account"
         $Name = Read-Host -Prompt "What should the account Name be? EXAMPLE: John Smith"
@@ -293,12 +280,11 @@ $Vault = New-Object -TypeName Windows.Security.Credentials.PasswordVault
 $Vault.RetrieveAll()
 
 $Answer2 = Read-Host -Prompt "[*] If you see any saved passwords in the output above it is because they credentials are most likely saved by Internet Explorer. Would you like to clear these clear text passwords? This only affects the Internet Explorer browser [y/N]"
-If ($Answer2 -like "y*")
-{
+If ($Answer2 -like "y*") {
 
     Write-Output "[*] Deleting clear text credentials from the Windows Password Vault"
-    ForEach ($V in $Vault)
-    {
+    ForEach ($V in $Vault) {
+
         $Cred = New-Object -TypeName Windows.Security.Credentials.PasswordCredential
         $Cred.Resource = $V.RetrieveAll().Resource
         $Cred.UserName = $V.RetrieveAll().UserName
@@ -310,8 +296,7 @@ If ($Answer2 -like "y*")
 
 
 # LOGGING
-If ($PSVersionTable.PSVersion.Major -lt 5)
-{
+If ($PSVersionTable.PSVersion.Major -lt 5) {
 
     $PSProfile = "C:\Windows\System32\WindowsPowerShell\v1.0\profile.ps1"
     New-Item -Path $PSProfile -ItemType File -Force
@@ -371,11 +356,49 @@ Enable-WindowsOptionalFeature -FeatureName "Windows-Defender-ApplicationGuard" -
 Write-Output "[*] Enabling the sanbox of Windows Defender"
 setx /m mp_force_use_sandbox 1
 
+Write-Output "[*] Enabling Structured Exception Handling Overwrite Protection (SEHOP)"
+New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Force
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name DisableExceptionChainValidation -Value 0 -PropertyType REG_DWORD
+
+Write-Output "[*] Applying UAC restrictions to local accounts on network logons"
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name LocalAccountTokenFilterPolicy -Value 0 -PropertyType REG_DWORD
+
+Write-Output "[*] Configure SMB v1 client driver so it is set to 'Disable driver (recommended)"
+New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\MrxSmb10" -Force
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\MrxSmb10" -Name Start -Value 4 -PropertyType REG_DWORD
+
+Write-Output "[*] Securing Against NetBIOS Name Service (NBT-NS) Poisoning Attacks"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\NetBT\Parameters" -Name NodeType -Value 2 -PropertyType REG_DWORD
+
+Write-Output "[*] Disabling IPv4 Source Routing"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip\Parameters" -Name DisableIPSourceRouting -Value 2 -PropertyType REG_DWORD
+
+Write-Output "[*] Disabling IPv6 source routing"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip6\Parameters" -Name DisableIPSourceRouting -Value 2 -PropertyType REG_DWORD
+
+Write-Output "[*] Disabling ICMP redirects"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip\Parameters" -Name  EnableICMPRedirect -Value 0 -PropertyType REG_DWORD
+
+Write-Output "[*] Preventing a WINS DoS attack avenue"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Netbt\Parameters" -Name   NoNameReleaseOnDemand -Value 1 -PropertyType REG_DWORD
+
+Write-Output "[*] Ensuring the use of Safe DLL Search mode"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Session Manager" -Name SafeDllSearchMode -Value 1 -PropertyType REG_DWORD
+
+Write-Output "[*] Generate an event when security event log reaches 90% capacity"
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Eventlog\Security" -Name WarningLevel -Value 90 -PropertyType REG_DWORD
+
+Write-Output "[*] Verifing that Windows is configured to have password protection take effect within a limited time frame when the screen saver becomes active."
+New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name ScreenSaverGracePeriod -Value 0 -PropertyType REG_SZ
+
+Write-Output "[*] Enabling Windows Defender AV to prevent user and apps from accessing dangerous websites"
+New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\Network Protection" -Name EnableNetworkProtection -Value 1 -PropertyType REG_DWORD
+
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUJodL1VJjQsyWNULdhinhQOEN
-# 2iWgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUQNJc9TzD2L5+wP2u34QJuk+6
+# zUSgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -435,11 +458,11 @@ setx /m mp_force_use_sandbox 1
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FM6vpvz1Yrng0bWjCbF2+x/bhZPtMA0GCSqGSIb3DQEBAQUABIIBABI1+ZGje5JL
-# JISyoN5SBhur03LZWEpBGBJvB3RlOfuv9BZ/6DQUyzAgAUmBdft+eTK79P7ohbnY
-# E/zuxzFG8CDsS5BbVrAO/cIt1fFMaLfGjjdMGe8FZyFquAF5gHtwWNhUlyFXWtvI
-# yj16rus99ILgEINAi2HH5vsRvz8nCIBeKIs8Q5YfizFexsqVNr/lk9JtR5m5mykz
-# vfcgDLKO88TS18RKjXOFGwFfT7HEUcm9OBnuAsDFhkXchxlFp1sL8BZViSlr8qkL
-# P807jHvSTNl54eaLZYegkOJ5s9sdefMyV7Hl8Y83AwFfqecFo9nCebECkkJUzxqt
-# mBMUaX98LA8=
+# FAPZxXEMyxGtbC2Enr5JvoY6tpXQMA0GCSqGSIb3DQEBAQUABIIBAGtPjVr6ulG8
+# t2fGe4wszGfEflD9DCC0CYjnb7L+8gcTGoHkh3HkQmd5dQ5zG4PI11qgQZlu2y7d
+# ntP93GvXpGondVQXwAF5flsfp7bHb0HR2M1r9tYcNgIp1KprUQWgTdYyCmg071K+
+# RUoLFn3rjlLEuc2bHdz9C3Gw3dCqGZDnXTdABciaZHz/xqGX1gwvyuc5kqap9L6G
+# q7aoyymt1+nl6rw814lC3F4Nm2qqbvdN/3f6+8ZgGM3jQI4mtIC+x+RfCpuRHxCk
+# bSAZC2RzYIz8NlY9AwUM+uW7krOIB8tIb07Ah2xcoTloV0B1ekpVKGQv9mSwKXJj
+# xPi08SMl/Us=
 # SIG # End signature block
