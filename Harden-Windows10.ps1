@@ -380,48 +380,48 @@ setx /m mp_force_use_sandbox 1
 
 Write-Output "[*] Enabling Structured Exception Handling Overwrite Protection (SEHOP)"
 New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Force
-New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name DisableExceptionChainValidation -Value 0 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name DisableExceptionChainValidation -Value 0 -PropertyType Dword
 
 Write-Output "[*] Applying UAC restrictions to local accounts on network logons"
-New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name LocalAccountTokenFilterPolicy -Value 0 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name LocalAccountTokenFilterPolicy -Value 0 -PropertyType Dword
 
 Write-Output "[*] Configure SMB v1 client driver so it is set to 'Disable driver (recommended)"
 New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\MrxSmb10" -Force
-New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\MrxSmb10" -Name Start -Value 4 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\MrxSmb10" -Name Start -Value 4 -PropertyType Dword
 
 Write-Output "[*] Securing Against NetBIOS Name Service (NBT-NS) Poisoning Attacks"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\NetBT\Parameters" -Name NodeType -Value 2 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\NetBT\Parameters" -Name NodeType -Value 2 -PropertyType Dword
 
 Write-Output "[*] Disabling IPv4 Source Routing"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip\Parameters" -Name DisableIPSourceRouting -Value 2 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip\Parameters" -Name DisableIPSourceRouting -Value 2 -PropertyType Dword
 
 Write-Output "[*] Disabling IPv6 source routing"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip6\Parameters" -Name DisableIPSourceRouting -Value 2 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip6\Parameters" -Name DisableIPSourceRouting -Value 2 -PropertyType Dword
 
 Write-Output "[*] Disabling ICMP redirects"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip\Parameters" -Name  EnableICMPRedirect -Value 0 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Tcpip\Parameters" -Name  EnableICMPRedirect -Value 0 -PropertyType Dword
 
 Write-Output "[*] Preventing a WINS DoS attack avenue"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Netbt\Parameters" -Name   NoNameReleaseOnDemand -Value 1 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Netbt\Parameters" -Name   NoNameReleaseOnDemand -Value 1 -PropertyType Dword
 
 Write-Output "[*] Ensuring the use of Safe DLL Search mode"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Session Manager" -Name SafeDllSearchMode -Value 1 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Session Manager" -Name SafeDllSearchMode -Value 1 -PropertyType Dword
 
 Write-Output "[*] Generate an event when security event log reaches 90% capacity"
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Eventlog\Security" -Name WarningLevel -Value 90 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Services\Eventlog\Security" -Name WarningLevel -Value 90 -PropertyType Dword
 
 Write-Output "[*] Verifing that Windows is configured to have password protection take effect within a limited time frame when the screen saver becomes active."
 New-ItemProperty -Path "HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name ScreenSaverGracePeriod -Value 0 -PropertyType String
 
 Write-Output "[*] Enabling Windows Defender AV to prevent user and apps from accessing dangerous websites"
 New-Item -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\Network Protection" -Force -ErrorAction SilentlyContinue
-New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\Network Protection" -Name EnableNetworkProtection -Value 1 -PropertyType DWORD
+New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windows Defender Exploit Guard\Network Protection" -Name EnableNetworkProtection -Value 1 -PropertyType Dword
 
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU5vFCR1msPkwGSmkx+44tEkm6
-# 9B6gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQU73fEMXqVz89nDE4UfguCVV77
+# iT+gggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -481,11 +481,11 @@ New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windo
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FNH5VWs0Hy1lt1QpHGtNmHUgcMHsMA0GCSqGSIb3DQEBAQUABIIBALW0MxW6YE0D
-# PtoLzc6jq5VHrSB063XnF6n0AEgMOb6WlfYxk6/yFxTqyinYVq9TRGBeUmdj7Dh7
-# MVu88rtcFn08mINKSDHKg4nChkxP/NhKmWQYM/NXOl5YssLJIP/3q6HDk8DPRVZn
-# J+Eg2++l9YM8CEaYrEiDMIpGJ9U8r97JgtJs4OXjfnIgIUfakus+QDp/WsF9c4Y6
-# GKRJ7I6P2p8Kbw/rTeLftK4gKq7vzKmbWXUiLRAzRblXw88rIlGlUdGvA6cme90U
-# 3KLYcF83HPE/kkSwEZvS70JbNUonzWcOuzPzV3orEK+ZClPadkMEYOM4qmhC6yaI
-# eu/NqkpySnI=
+# FJ54jWGl+f5CFKpgkgDLyUjNHrkiMA0GCSqGSIb3DQEBAQUABIIBAMUIAkTOaT/J
+# R9hyzWClGryEM9g+gfox6vsDKC8RrWmsi3j4TciItD8cPSiWaCBoxKAQl7EgmT76
+# WoUevOeluyajqL/aipRH0Vu7nAdrhFi0u05nb8Mp/BS+Prmkweium4HXRdolYDVM
+# hu+6BY+bIjZ7rsrC746d0+zyoAu1Eto1itdWMJpRkARxNrQLd5OUUBHlBvnKHxNA
+# +i0FfDRblH+dVYVQ6KzW1C/Mr5dv1PH1dwWOH/cD8F+lAwK8p/gogNUjNU3+rI8F
+# fobKS3H7sg+k81tOJccU+o7tmjllHXmdgldzZ4RMTJL/2gIEv0qqDtSSwsJ1JTgu
+# nKGxtM01reM=
 # SIG # End signature block
