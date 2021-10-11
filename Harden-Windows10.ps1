@@ -5,16 +5,13 @@ Function Test-Admin {
 
 }  # End Function Test-Admin
 
-If ((Test-Admin) -eq $False)
-{
+If ((Test-Admin) -eq $False) {
 
-    If ($Elevated)
-    {
+    If ($Elevated) {
         Write-Output "[*] Tried to elevate, did not work, aborting"
 
     }  # End Else
-    Else
-    {
+    Else {
 
         Start-Process -FilePath "C:\Windows\System32\powershell.exe" -Verb RunAs -ArgumentList ('-NoProfile -NoExit -File "{0}" -Elevated' -f ($myinvocation.MyCommand.Definition))
 
@@ -246,6 +243,31 @@ Else {
 
 }  # End Else
 
+# EXTRANEOUS SERVICES
+Write-Output "[*] Disabling receommended unused services"
+$Services = "WMPNetworkSvc","sshd","WMPNetworkSvc","icssvc","RpcLocator","RemoteAccess","XblAuthManager","XblGameSave","XboxNetApiSvc","XboxGipSvc"
+Stop-Service -Name $Services
+$Services | ForEach-Object { Set-Service -Name $_ -StartupType Disabled }
+
+
+# FIREWALL LOG FILES
+Write-Output "[*] Defining log file locations for Public, Domain, and Private firewall connections"
+$FirewallLogFiles = "C:\Windows\System32\LogFiles\Firewall\domainfw.log","C:\Windows\System32\LogFiles\Firewall\domainfw.log.old","C:\Windows\System32\LogFiles\Firewall\privatefw.log","C:\Windows\System32\LogFiles\Firewall"
+New-Item -Path $Path -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+
+$Acl = Get-Acl -Path $FirewallLogFiles
+$Acl.SetAccessRuleProtection($True, $False)
+$PermittedUsers = @('NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators', 'BUILTIN\Network Configuration Operators', 'NT SERVICE\MpsSvc')
+ForEach ($User in $PermittedUsers) {
+
+  $Permission = $User, 'FullControl', 'Allow'
+  $AccessRule = New-Object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $Permission
+  $Acl.AddAccessRule($AccessRule)
+
+}  # End ForEach
+
+$Acl.SetOwner((New-Object -TypeName System.Security.Principal.NTAccount('BUILTIN\Administrators')))
+$Acl | Set-Acl -Path $FirewallLogFiles
 
 # GROUP MEMBERSHIP
 Write-Output "[*] Enabling UAC on all processes that require elevation"
@@ -397,8 +419,8 @@ New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windo
 # SIG # Begin signature block
 # MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
 # gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUQNJc9TzD2L5+wP2u34QJuk+6
-# zUSgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
+# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUgtxKBeZf/Y4tbM0lKMmSXPW+
+# LQWgggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
 # BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
 # BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
 # IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
@@ -458,11 +480,11 @@ New-ItemProperty -Path "HKLM:\Software\Policies\Microsoft\Windows Defender\Windo
 # aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
 # CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
 # AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FAPZxXEMyxGtbC2Enr5JvoY6tpXQMA0GCSqGSIb3DQEBAQUABIIBAGtPjVr6ulG8
-# t2fGe4wszGfEflD9DCC0CYjnb7L+8gcTGoHkh3HkQmd5dQ5zG4PI11qgQZlu2y7d
-# ntP93GvXpGondVQXwAF5flsfp7bHb0HR2M1r9tYcNgIp1KprUQWgTdYyCmg071K+
-# RUoLFn3rjlLEuc2bHdz9C3Gw3dCqGZDnXTdABciaZHz/xqGX1gwvyuc5kqap9L6G
-# q7aoyymt1+nl6rw814lC3F4Nm2qqbvdN/3f6+8ZgGM3jQI4mtIC+x+RfCpuRHxCk
-# bSAZC2RzYIz8NlY9AwUM+uW7krOIB8tIb07Ah2xcoTloV0B1ekpVKGQv9mSwKXJj
-# xPi08SMl/Us=
+# FKaXmMvm/Ha75Atb31KY3KBIlZiDMA0GCSqGSIb3DQEBAQUABIIBADheFqZF3Q6t
+# 2tMShhilHJ8K06fmByGzYrU8ewjNUTt7S9JdigZz6eAbYR2bULiNTbanI375hNVi
+# w0NnFAszX2mIJ62T0Fvhht7YWgijaj4gpvfr5ueRCwGP/DbpjXhHMhnQIlub1V9Z
+# aP17N5dWnVBVhPx7tGPVN9Uj9kI7A1qg3KT4iCUsS8plnXJf0M5zblNbyUSW+Xb5
+# h1KpO4DvCipYjSXGOBeTxnXOH6jOS1rfkjXYqpNwhBHX+LWt1sljKKzsmgpTOf8R
+# X+XZoIJmEXsDNqsBoIhXLcjjOK+heZWpf0abscCs/c32TCl8JruGg2ThUod77Tf1
+# pWRiXcY30jQ=
 # SIG # End signature block
