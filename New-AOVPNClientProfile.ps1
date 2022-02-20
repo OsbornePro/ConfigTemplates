@@ -20,7 +20,7 @@ $EapConfigXmlStream.InnerXml = $InnerXML2
 
 # Add the -AllUserConnection switch parameter to Add-VPNConnection if you want this to be a profile for all users that sign into the device instead of each individual one
 Write-Output "[*] Creating the VPN Connection"
-Add-VPNConnection -Name $Connection -ServerAddress $ServerAddress -TunnelType Ikev2 -RememberCredential -SplitTunneling -Force -EncryptionLevel Maximum -PassThru -DnsSuffix "osbornepro.com" -AuthenticationMethod Eap -EapConfigXmlStream $EapConfigXmlStream 
+Add-VPNConnection -Name $Connection -ServerAddress $ServerAddress -TunnelType Ikev2 -RememberCredential -SplitTunneling -Force -EncryptionLevel Maximum -PassThru -DnsSuffix $DnsSuffx -AuthenticationMethod Eap -EapConfigXmlStream $EapConfigXmlStream 
 
 Write-Output "[*] Defining strong encryption protocols. These must match the server"
 Set-VpnConnectionIPsecConfiguration -ConnectionName $Connection -AuthenticationTransformConstants SHA256128 -CipherTransformConstants AES128 -DHGroup Group14 -EncryptionMethod AES128 -IntegrityCheckMethod SHA256 -PFSgroup PFS2048 -Force
