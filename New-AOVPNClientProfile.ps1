@@ -14,6 +14,7 @@ $InnerXML2 = ((New-EapConfiguration -Peap -VerifyServerIdentity -TunnledEapAuthM
 $EapConfigXmlStream = (New-EapConfiguration -Peap -VerifyServerIdentity -TunnledEapAuthMethod $TunnledEapAuthMethod -FastReconnect $True).EapConfigXmlStream
 $EapConfigXmlStream.InnerXml = $InnerXML2
 
+# Remove the -AllUserConnection if you want this to be a profile that is set for a user and can be modified by that user
 Write-Output "[*] Creating the VPN Connection"
 Add-VPNConnection -Name $Connection -ServerAddress $ServerAddress -TunnelType Ikev2 -RememberCredential -SplitTunneling -Force -EncryptionLevel Maximum -PassThru -AllUserConnection -DnsSuffix "usav.org" -AuthenticationMethod Eap -EapConfigXmlStream $EapConfigXmlStream 
 
