@@ -1,7 +1,7 @@
 # I built this script because the Always on VPN client profile creation script Microsoft provided is garbage. Mine is better. 
 # They use WMI objects which has created issues with Windows 11 and returns Access Denied errors in Windows 10
 
-$DnsSuffx = Read-Host -Prompt "Enter the DNS Suffix to append onto hostname EXAMPLE: osbornepro.com.com"
+$DnsSuffx = (Get-CimInstance -ClassName Win32_ComputerSystem).Domain
 $ServerAddress = Read-Host -Prompt "Enter the public DNS name of your AOVPN Server EXAMPLE: aovpn.osbornepro.com"
 $NPSServer = Read-Host -Prompt "Enter the FQDN of your NPS server that will be authenticating the RADIUS requests EXAMPLE: nps-server.osbornepro.com"
 $Connection = Read-Host -Prompt "Enter the connection name as you would like it to appear to your users EXAMPLE: OsbornePro Network"
@@ -27,9 +27,9 @@ Set-VpnConnectionIPsecConfiguration -ConnectionName $Connection -AuthenticationT
 
 
 Write-Output "[*] Modifying the users rasphone.pbk file to modify the network properties of the VPN profile"
-Write-Output "[*] Enabling Auto Connect of AOVPN, Disabling IPv6, disabling NetBIOS, registering domain suffix, and enabling split tunneling"
+Write-Output "[*] Enabling Auto Connect of AOVPN,disabling network outage time to prevent manual reconnects, Disabling IPv6, disabling NetBIOS, registering domain suffix, and enabling split tunneling"
 $RasPhonePath = "$env:APPDATA\Microsoft\Network\Connections\Pbk\rasphone.pbk"
-$RasPhoneChanges = (Get-Content -Path $RasPhonePath | Out-String).Replace("IpDnsSuffix=","IpDnsSuffix=$DnsSuffx").Replace("IpDnsSuffix=$DnsSuffx.$DnsSuffx","IpDnsSuffix=$DnsSuffx").Replace("AutoLogon=0","AutoLogon=1").Replace("ExcludedProtocols=0","ExcludedProtocols=8").Replace("IpPrioritizeRemote=1","IpPrioritizeRemote=0").Replace("PreferredHwFlow=0","PreferredHwFlow=1").Replace("PreferredProtocol=0","PreferredProtocol=1").Replace("PreferredCompression=0","PreferredCompression=1").Replace("PreferredSpeaker=0","PreferredSpeaker=1").Replace("IpDnsFlags=0","IpDnsFlags=1").Replace("IpNBTFlags=1","IpNBTFlags=0").Replace("AutoTiggerCapable=0","AutoTiggerCapable=1").Replace("AlwaysOnCapable=0","AlwaysOnCapable=1")
+$RasPhoneChanges = (Get-Content -Path $RasPhonePath | Out-String).Replace("IpDnsSuffix=","IpDnsSuffix=$DnsSuffx").Replace("IpDnsSuffix=$DnsSuffx$DnsSuffx","IpDnsSuffix=$DnsSuffx").Replace("AutoLogon=0","AutoLogon=1").Replace("ExcludedProtocols=0","ExcludedProtocols=8").Replace("IpPrioritizeRemote=1","IpPrioritizeRemote=0").Replace("PreferredHwFlow=0","PreferredHwFlow=1").Replace("PreferredProtocol=0","PreferredProtocol=1").Replace("PreferredCompression=0","PreferredCompression=1").Replace("PreferredSpeaker=0","PreferredSpeaker=1").Replace("IpDnsFlags=0","IpDnsFlags=1").Replace("IpNBTFlags=1","IpNBTFlags=0").Replace("AutoTiggerCapable=0","AutoTiggerCapable=1").Replace("AlwaysOnCapable=0","AlwaysOnCapable=1").Replace("NetworkOutageTime=1800","NetworkOutageTime=0")
 
 Set-Content -Path $RasPhonePath -Value $RasPhoneChanges -Force
 
