@@ -28,7 +28,7 @@ Write-Output "[*] Defining strong encryption protocols. These must match the ser
 Set-VpnConnectionIPsecConfiguration -ConnectionName $Connection -AuthenticationTransformConstants SHA256128 -CipherTransformConstants AES128 -DHGroup Group14 -EncryptionMethod AES128 -IntegrityCheckMethod SHA256 -PFSgroup PFS2048 -Force
 
 Write-Output "[*] Setting $DnsSuffix as a trusted network for $Connection"
-Add-VpnConnectionTriggerTrustedNetwork -ConnectionName $Connection -DnsSuffix $DnsSuffix
+Add-VpnConnectionTriggerTrustedNetwork -ConnectionName $Connection -DnsSuffix $DnsSuffix -Force -ErrorAction SilentlyContinue
 
 Write-Output "[*] Modifying the users rasphone.pbk file to modify the network properties of the VPN profile"
 Write-Output "[*] Enabling Auto Connect of AOVPN,disabling network outage time to prevent manual reconnects, Disabling IPv6, disabling NetBIOS, registering domain suffix, and enabling split tunneling"
