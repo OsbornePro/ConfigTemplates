@@ -1,4 +1,4 @@
-#	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+# $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
@@ -41,7 +41,8 @@ MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@op
 
 
 # Logging
-SyslogFacility USER 
+SyslogFacility USER # Debian
+#SyslogFacility AUTHPRIV # RHEL, CentOS
 LogLevel INFO
 
 
@@ -66,8 +67,8 @@ MaxSessions 6
 PubkeyAuthentication yes
 
 # Expect .ssh/authorized_keys2 to be disregarded by default in future.
-AuthorizedKeysFile	.ssh/authorized_keys 
-# I Removed this .ssh/authorized_keys2
+AuthorizedKeysFile	.ssh/authorized_keys # Debian
+#AuthorizedKeysFile	.ssh/authorized_keys .ssh/authorized_keys.%u # RHEL
 
 #AuthorizedPrincipalsFile none
 #AuthorizedKeysCommand none
@@ -106,16 +107,14 @@ IgnoreRhosts yes
 # RhostsRSAAuthentication yes
 # This specifies whether sshd can try to use rhosts based authentication. Because rhosts authentication is insecure you shouldn't use this option. 
 
-#RSAAuthentication yes
-# This specifies whether to try RSA authentication. This option must be set to yes for better security in your session
-
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication no
 PermitEmptyPasswords no
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
-ChallengeResponseAuthentication no
+ChallengeResponseAuthentication no # Debian
+#ChallengeResponseAuthentication yes # RHEL, CentOS
 
 # Kerberos options
 KerberosAuthentication no
@@ -138,7 +137,8 @@ GSSAPIAuthentication no
 # If you just want the PAM account and session checks to run without
 # PAM authentication, then enable this but set PasswordAuthentication
 # and ChallengeResponseAuthentication to 'no'.
-UsePAM no
+UsePAM no # Debian
+#UsePAM yes # RHEL, CentOS
 # Depending on your situation you may want this set to yes. When a user account has its password disabled the SSH key authentication may not work unless this is set to yes
 
 AllowGroups sshusers
@@ -218,23 +218,24 @@ Banner /etc/issue
 # Prevent ssh from advertising its version
 DebianBanner no
 
+
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
 
-Match User tom
-	PasswordAuthentication yes
-	HostbasedAuthentication no
-	PubkeyAuthentication no
+#Match User tom
+#	PasswordAuthentication yes
+#	HostbasedAuthentication no
+#	PubkeyAuthentication no
 
-Match User chris
-	PasswordAuthentication no
-	HostBasedAuthentication yes
-	PubkeyAuthentication no
+#Match User chris
+#	PasswordAuthentication no
+#	HostBasedAuthentication yes
+#	PubkeyAuthentication no
 
-Match all
-	PasswordAuthentication no
-	HostbasedAuthentication no
-	PermitEmptyPasswords no
+#Match all
+#	PasswordAuthentication no
+#	HostbasedAuthentication no
+#	PermitEmptyPasswords no
 
 
 # override default of no subsystems
