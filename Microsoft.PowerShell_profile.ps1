@@ -1,6 +1,9 @@
-#---------------------------------------------------#
+#----------------------------------------------------#
 #  OsbornePro Template : Windows PowerShell Profile  #
-#---------------------------------------------------#
+#----------------------------------------------------#
+# Edit this file in your PowerShell session using the below command
+# notepad $PROFILE
+
 Write-Verbose "Setting start directory location."
     Set-Location $env:USERPROFILE
 
@@ -22,10 +25,17 @@ Write-Verbose "Create a directory to save your PowerShell transcript logs"
     New-Item -Path $env:TEMP -Name Transcripts -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
 
 Write-Verbose "Delete saved PowerShell transcripts that are older than 7 days"
-    Get-ChildItem -Path "$env:TEMP\Transcripts" -Force -ErrorAction SilentlyContinue | Where-Object -FilterScript { $_.CreationTime -ge (Get-Date).AddDays(-7) }
+    Get-ChildItem -Path "$env:TEMP\Transcripts" -Force -ErrorAction SilentlyContinue | Where-Object -FilterScript { $_.CreationTime -ge (Get-Date).AddDays(7) } | Remove-Item -Force -Confirm:$False -ErrorAction SilentlyContinue
 
 Write-Verbose "Save a transcript of your PowerShell sessions. Exiting a powershell session will stop transcription"
-    Start-Transcript -Path "$env:TEMP\Transcripts\$(Get-Date -Format yyyy-MM-dd_hh-mm-ss).txt" -Force
+    $Transcript = "$env:TEMP\Transcripts\$(Get-Date -Format yyyy-MM-dd_hh-mm-ss).txt"
+    Start-Transcript -Path $Transcript -Force | Out-Null
+    
+Write-Verbose "Clearing output to only show transcript log file location"
+    Clear-Host
+
+Write-Output "Path to transript log file saved in `$Transcript"
+Write-Host "Welcome back $env:USERNAME!" -ForegroundColor Green
 
 #Write-Verbose 'Setting the Window Buffer Size'
 #    $BufferSize = $Shell.BufferSize
