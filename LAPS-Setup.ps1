@@ -1,3 +1,18 @@
+
+$Logo = @"
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
+https://osbornepro.com
+EMAIL: info@osbornepro.com
+"@
+Write-Output "$Logo"
 Write-Output "[*] This script is used to set up LAPS in your domain"
 
 
@@ -50,7 +65,7 @@ Try { Find-AdmPwdExtendedRights -Identity "*" } Catch { Write-Verbose "This is h
 
 Do {
 
-    $OU = Read-Host -Prompt "What is the name of the OU that contains your LAPS computers? EXAMPLE: Computers"
+    $OU = Read-Host -Prompt "What is the name of the OU that contains your LAPS computers This is required for LAPS to work? EXAMPLE: Computers"
     If ($OU.Length -gt 1) {
 
         $DN = Get-ADObject -Filter {Name -like $OU} | Select-Object -ExpandProperty DistinguishedName
