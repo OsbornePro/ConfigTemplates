@@ -9,12 +9,15 @@
 # This script confiures isolation mode with Active Directory and allows you to set the IP address and passive ports for the firewall
 
 $Logo = @"
-________         ___.                             __________                
-\_____  \   _____\_ |__   ___________  ____   ____\______   \_______  ____  
- /   |   \ /  ___/| __ \ /  _ \_  __ \/    \_/ __ \|     ___/\_  __ \/  _ \ 
-/    |    \\___ \ | \_\ (  <_> )  | \/   |  \  ___/|    |     |  | \(  <_> )
-\_______  /____  >|___  /\____/|__|  |___|  /\___  >____|     |__|   \____/ 
-        \/     \/     \/                  \/     \/                         
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
 "@
 
 Function Test-Admin {
@@ -24,20 +27,17 @@ Function Test-Admin {
     
 }  # End Function Test-Admin
 
-If ((Test-Admin) -eq $False)  
-{
+If ((Test-Admin) -eq $False) {
 
-    If ($Elevated) 
-    {
+    If ($Elevated) {
+
         Write-Output "[*] Tried to elevate, did not work, aborting"
         
-    }  # End Else 
-    Else 
-    {
+    } Else {
     
         Start-Process -FilePath "C:\Windows\System32\powershell.exe" -Verb RunAs -ArgumentList ('-NoProfile -NoExit -File "{0}" -Elevated' -f ($myinvocation.MyCommand.Definition))
         
-    }  # End Else
+    }  # End If Else
     
     Exit
     
@@ -81,22 +81,18 @@ New-WebFtpSite -Name $FTPSiteName -Port $Port -PhysicalPath $FTPRootDir -Force
 $FTPGroupName = Read-Host -Prompt "What should the local FTP Users group name be? EXAMPLE: FTPUsers"
 Write-Output "[*] Creating the local FTP Group $FTPGroupName"
 
-If (!(Get-LocalGroup -Name $FTPGroupName -ErrorAction SilentlyContinue))
-{
+If (!(Get-LocalGroup -Name $FTPGroupName -ErrorAction SilentlyContinue)) {
 
     New-LocalGroup -Name $FTPGroupName -Description "Members of this group can access the FTP server"
 
-}  # End If
-Else
-{
+} Else {
 
     Write-Output "[!] Group $FTPGroupName already exists. Skipping its creation"
 
 }  # End Else
 
 $Ans = Read-Host -Prompt "[*] Would you like to create a local FTP user to access the server? [y/N]"
-If ($Ans -like "y*")
-{
+If ($Ans -like "y*") {
     
     $LocalFTPUserName = Read-Host -Prompt "What should be the name of the Local FTP User account?"
     New-LocalUser -AccountNeverExpires -Description "Local FTP User account" -FullName "FTP User" -Disabled:$False -Password (Read-Host -Prompt "Enter a password for the local FTP User" -AsSecureString) -Name $LocalFTPUserName -UserMayNotChangePassword
@@ -123,24 +119,21 @@ Write-Output "[*] Enabling Basic Authentication on FTP Site"
 Set-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.authentication.basicAuthentication.enabled' -Value $True
 
 
-If ((Get-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.controlChannelPolicy') -notlike 'SslRequire')
-{
+If ((Get-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.controlChannelPolicy') -notlike 'SslRequire') {
 
     Write-Output "[*] Configuring SSL to be required"
     Set-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.controlChannelPolicy' -Value $True
 
 }  # End If
 
-If ((Get-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.dataChannelPolicy') -notlike 'SslRequire')
-{
+If ((Get-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.dataChannelPolicy') -notlike 'SslRequire') {
 
     Write-Output "[*] Configuring SSL to be required"
     Set-ItemProperty -Path $FTPSitePath -Name 'ftpServer.security.ssl.dataChannelPolicy' -Value $True
 
 }  # End If
 
-If (Get-LocalGroup -Name $FTPGroupName)
-{
+If (Get-LocalGroup -Name $FTPGroupName) {
 
     Write-Output "[*] Setting permissions on $FTPRootDir"
     # USERS
@@ -191,8 +184,7 @@ Write-Output "[*] The below certificate will be used for FTP over SSL communicat
 $Thumb
 
 $Thumbprint = Read-Host -Prompt "Enter the certificate thumbprint you want to use for the FTP over SSL instance. Leave blank and press ENTER if you wish to have this script find the certificate automatically by discovering a Local Machine cert in the Personal Store that has a friendly name containing `"*FTP*`"."
-If ($Thumbprint -eq "")
-{
+If ($Thumbprint -eq "") {
 
     $Thumbprint = $Thumb
 
@@ -201,8 +193,7 @@ If ($Thumbprint -eq "")
 Set-ItemProperty -Path $FTPSitePath -Name ftpServer.security.ssl.serverCertHash -Value $Thumbprint
 
 $Ansr = Read-Host -Prompt "Would you like to define the passive (PASV) ports to listen on? [y/N]"
-If ($Ansr -like "y*")
-{
+If ($Ansr -like "y*") {
 
     $V1 = Read-Host -Prompt "What should the lowest accepted port be? EXAMPLE: 40000"
     $V2 = Read-Host -Prompt "What should the highest accepted port be? EXAPMLE: 41000"
@@ -216,8 +207,7 @@ If ($Ansr -like "y*")
     
     Write-Output "[*] Setting IP Address for firewall to allow passive FTP connections from remote locations"
     $IPAddress = Read-Host -Prompt "What is the IP address you would like to for Passive connections allowing clients on the other side of a router to reach you? Leave blank to obtain the DHCP assigned private IP address automatically."
-    If ($IPAddress -eq "")
-    {
+    If ($IPAddress -eq "") {
 
         $IPAddress = (Get-NetIPAddress -AddressFamily IPv4 -AddressState Preferred -PrefixOrigin Dhcp).IPAddress
         Set-ItemProperty -Path $FTPSitePath -Name ftpServer.firewallSupport.externalIp4Address -Value $IPAddress
@@ -231,16 +221,14 @@ Write-Output "[*] Enabling 128-bit encryption"
 $ConfigPath = 'ftpServer.security.ssl'
 
 $SiteConfig = Get-ItemProperty -Path $FTPSitePath -Name $ConfigPath
-If ($SiteConfig.ssl128 -eq $False)
-{
+If ($SiteConfig.ssl128 -eq $False) {
 
     Set-ItemProperty -Path $FTPSitePath -Name "$ConfigPath.ssl128" -Value $True
 
 }  # End If
 
 $A = Read-Host -Prompt "Would you like to add a virtual host name for your ftp site? [y/N]"
-If ($A -like "y*")
-{
+If ($A -like "y*") {
 
     $VHost = Read-Host -Prompt "What should the virtual hostname be? EXAMPLE: ftp.domain.com"
 
@@ -259,76 +247,3 @@ Restart-WebItem -PSPath $FTPSitePath
 
 Write-Output "[*] Testing FTP port is open"
 Test-NetConnection -ComputerName "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -Port $Port
-
-# SIG # Begin signature block
-# MIIM9AYJKoZIhvcNAQcCoIIM5TCCDOECAQExCzAJBgUrDgMCGgUAMGkGCisGAQQB
-# gjcCAQSgWzBZMDQGCisGAQQBgjcCAR4wJgIDAQAABBAfzDtgWUsITrck0sYpfvNR
-# AgEAAgEAAgEAAgEAAgEAMCEwCQYFKw4DAhoFAAQUcEc0slDe1MaN6n9ufDdDwW0k
-# sQugggn7MIIE0DCCA7igAwIBAgIBBzANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UE
-# BhMCVVMxEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAY
-# BgNVBAoTEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290
-# IENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTExMDUwMzA3MDAwMFoXDTMx
-# MDUwMzA3MDAwMFowgbQxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdBcml6b25hMRMw
-# EQYDVQQHEwpTY290dHNkYWxlMRowGAYDVQQKExFHb0RhZGR5LmNvbSwgSW5jLjEt
-# MCsGA1UECxMkaHR0cDovL2NlcnRzLmdvZGFkZHkuY29tL3JlcG9zaXRvcnkvMTMw
-# MQYDVQQDEypHbyBEYWRkeSBTZWN1cmUgQ2VydGlmaWNhdGUgQXV0aG9yaXR5IC0g
-# RzIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC54MsQ1K92vdSTYusw
-# ZLiBCGzDBNliF44v/z5lz4/OYuY8UhzaFkVLVat4a2ODYpDOD2lsmcgaFItMzEUz
-# 6ojcnqOvK/6AYZ15V8TPLvQ/MDxdR/yaFrzDN5ZBUY4RS1T4KL7QjL7wMDge87Am
-# +GZHY23ecSZHjzhHU9FGHbTj3ADqRay9vHHZqm8A29vNMDp5T19MR/gd71vCxJ1g
-# O7GyQ5HYpDNO6rPWJ0+tJYqlxvTV0KaudAVkV4i1RFXULSo6Pvi4vekyCgKUZMQW
-# OlDxSq7neTOvDCAHf+jfBDnCaQJsY1L6d8EbyHSHyLmTGFBUNUtpTrw700kuH9zB
-# 0lL7AgMBAAGjggEaMIIBFjAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIB
-# BjAdBgNVHQ4EFgQUQMK9J47MNIMwojPX+2yz8LQsgM4wHwYDVR0jBBgwFoAUOpqF
-# BxBnKLbv9r0FQW4gwZTaD94wNAYIKwYBBQUHAQEEKDAmMCQGCCsGAQUFBzABhhho
-# dHRwOi8vb2NzcC5nb2RhZGR5LmNvbS8wNQYDVR0fBC4wLDAqoCigJoYkaHR0cDov
-# L2NybC5nb2RhZGR5LmNvbS9nZHJvb3QtZzIuY3JsMEYGA1UdIAQ/MD0wOwYEVR0g
-# ADAzMDEGCCsGAQUFBwIBFiVodHRwczovL2NlcnRzLmdvZGFkZHkuY29tL3JlcG9z
-# aXRvcnkvMA0GCSqGSIb3DQEBCwUAA4IBAQAIfmyTEMg4uJapkEv/oV9PBO9sPpyI
-# BslQj6Zz91cxG7685C/b+LrTW+C05+Z5Yg4MotdqY3MxtfWoSKQ7CC2iXZDXtHwl
-# TxFWMMS2RJ17LJ3lXubvDGGqv+QqG+6EnriDfcFDzkSnE3ANkR/0yBOtg2DZ2HKo
-# cyQetawiDsoXiWJYRBuriSUBAA/NxBti21G00w9RKpv0vHP8ds42pM3Z2Czqrpv1
-# KrKQ0U11GIo/ikGQI31bS/6kA1ibRrLDYGCD+H1QQc7CoZDDu+8CL9IVVO5EFdkK
-# rqeKM+2xLXY2JtwE65/3YR8V3Idv7kaWKK2hJn0KCacuBKONvPi8BDABMIIFIzCC
-# BAugAwIBAgIIXIhNoAmmSAYwDQYJKoZIhvcNAQELBQAwgbQxCzAJBgNVBAYTAlVT
-# MRAwDgYDVQQIEwdBcml6b25hMRMwEQYDVQQHEwpTY290dHNkYWxlMRowGAYDVQQK
-# ExFHb0RhZGR5LmNvbSwgSW5jLjEtMCsGA1UECxMkaHR0cDovL2NlcnRzLmdvZGFk
-# ZHkuY29tL3JlcG9zaXRvcnkvMTMwMQYDVQQDEypHbyBEYWRkeSBTZWN1cmUgQ2Vy
-# dGlmaWNhdGUgQXV0aG9yaXR5IC0gRzIwHhcNMjAxMTE1MjMyMDI5WhcNMjExMTA0
-# MTkzNjM2WjBlMQswCQYDVQQGEwJVUzERMA8GA1UECBMIQ29sb3JhZG8xGTAXBgNV
-# BAcTEENvbG9yYWRvIFNwcmluZ3MxEzARBgNVBAoTCk9zYm9ybmVQcm8xEzARBgNV
-# BAMTCk9zYm9ybmVQcm8wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDJ
-# V6Cvuf47D4iFITUSNj0ucZk+BfmrRG7XVOOiY9o7qJgaAN88SBSY45rpZtGnEVAY
-# Avj6coNuAqLa8k7+Im72TkMpoLAK0FZtrg6PTfJgi2pFWP+UrTaorLZnG3oIhzNG
-# Bt5oqBEy+BsVoUfA8/aFey3FedKuD1CeTKrghedqvGB+wGefMyT/+jaC99ezqGqs
-# SoXXCBeH6wJahstM5WAddUOylTkTEfyfsqWfMsgWbVn3VokIqpL6rE6YCtNROkZq
-# fCLZ7MJb5hQEl191qYc5VlMKuWlQWGrgVvEIE/8lgJAMwVPDwLNcFnB+zyKb+ULu
-# rWG3gGaKUk1Z5fK6YQ+BAgMBAAGjggGFMIIBgTAMBgNVHRMBAf8EAjAAMBMGA1Ud
-# JQQMMAoGCCsGAQUFBwMDMA4GA1UdDwEB/wQEAwIHgDA1BgNVHR8ELjAsMCqgKKAm
-# hiRodHRwOi8vY3JsLmdvZGFkZHkuY29tL2dkaWcyczUtNi5jcmwwXQYDVR0gBFYw
-# VDBIBgtghkgBhv1tAQcXAjA5MDcGCCsGAQUFBwIBFitodHRwOi8vY2VydGlmaWNh
-# dGVzLmdvZGFkZHkuY29tL3JlcG9zaXRvcnkvMAgGBmeBDAEEATB2BggrBgEFBQcB
-# AQRqMGgwJAYIKwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmdvZGFkZHkuY29tLzBABggr
-# BgEFBQcwAoY0aHR0cDovL2NlcnRpZmljYXRlcy5nb2RhZGR5LmNvbS9yZXBvc2l0
-# b3J5L2dkaWcyLmNydDAfBgNVHSMEGDAWgBRAwr0njsw0gzCiM9f7bLPwtCyAzjAd
-# BgNVHQ4EFgQUkWYB7pDl3xX+PlMK1XO7rUHjbrwwDQYJKoZIhvcNAQELBQADggEB
-# AFSsN3fgaGGCi6m8GuaIrJayKZeEpeIK1VHJyoa33eFUY+0vHaASnH3J/jVHW4BF
-# U3bgFR/H/4B0XbYPlB1f4TYrYh0Ig9goYHK30LiWf+qXaX3WY9mOV3rM6Q/JfPpf
-# x55uU9T4yeY8g3KyA7Y7PmH+ZRgcQqDOZ5IAwKgknYoH25mCZwoZ7z/oJESAstPL
-# vImVrSkCPHKQxZy/tdM9liOYB5R2o/EgOD5OH3B/GzwmyFG3CqrqI2L4btQKKhm+
-# CPrue5oXv2theaUOd+IYJW9LA3gvP/zVQhlOQ/IbDRt7BibQp0uWjYaMAOaEKxZN
-# IksPKEJ8AxAHIvr+3P8R17UxggJjMIICXwIBATCBwTCBtDELMAkGA1UEBhMCVVMx
-# EDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAYBgNVBAoT
-# EUdvRGFkZHkuY29tLCBJbmMuMS0wKwYDVQQLEyRodHRwOi8vY2VydHMuZ29kYWRk
-# eS5jb20vcmVwb3NpdG9yeS8xMzAxBgNVBAMTKkdvIERhZGR5IFNlY3VyZSBDZXJ0
-# aWZpY2F0ZSBBdXRob3JpdHkgLSBHMgIIXIhNoAmmSAYwCQYFKw4DAhoFAKB4MBgG
-# CisGAQQBgjcCAQwxCjAIoAKAAKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcC
-# AQQwHAYKKwYBBAGCNwIBCzEOMAwGCisGAQQBgjcCARUwIwYJKoZIhvcNAQkEMRYE
-# FM3lnMv0d2u8N7vf/gdOrERl/6AsMA0GCSqGSIb3DQEBAQUABIIBAKnaR4+dr5KC
-# FihpAHJceXlBiW1Of513HpJZ2QZwIP/kyKEAPDrBkZU4uJjMZlCEmMW5sXY2a9mI
-# 4wz1K/kbNSvchXNKiqncBKxtOpbSiQTlhXjBd/hmZ5E/cbcAZAC+bKWWmcuyzv5Y
-# F3Rup4sXtP8Sv+91P0mB3DVFfvedAITFjzJg0DFgDk2z4LgGyIbvhJYEjheNZFqc
-# LOBbfXi1TFcXlApdhKFs0D/l9o+e7RhViN6p0SaYo3KL/BrivjHOuDDkHmXX75iB
-# pHKyAxY2Cmvms9OGwun0WbUIF2RZ1dazZajyah4TrkTDNDtgFcDa6gMVMdsp4b1c
-# hi57W+FMnrc=
-# SIG # End signature block
