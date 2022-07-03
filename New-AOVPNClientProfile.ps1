@@ -1,5 +1,37 @@
-# I built this script because the Always on VPN client profile creation script Microsoft provided is garbage. Mine is better. 
+# CLIENT VPN PROFILE CREATED
+# ---------------------------
+# 1.) Uses IKEv2 UDP Connection to establish VPN connection with Certificate based authentication
+# 2.) If IKEv2 traffic is blocked or the connection fails it falls over to SSTP which uses HTTPS
+#
+# SUMMARY: 
+# I wrote this script because the Always on VPN client profile creation script Microsoft provided is garbage. Mine is better. 
 # They use WMI objects which has created issues with Windows 11 and returns Access Denied errors in Windows 10
+# This script can build AOVPN profiles for unprivileges user accounts
+#
+# FIREWALL COMMANDS:
+# Below are Cisco ASA Firewall Commands that are used to enable Always On VPN Traffic
+# This assumes you have a Windows Server with the Always on VPN service that has a DMZ Interface IP address and LAN Interface IP Address
+#---------------------------------------------------------------
+# NAT TRANSLATION (Your Public IP Address)
+#nat (dmz,outside) source static AOVPN 50.50.50.50
+#
+# ACCESS LIST (ACL) CONFIGS
+# Public IKEv2
+#access-list aovpnPub line 1 extended permit udp any4 host 50.50.50.50 eq isakmp
+#access-list aovpnPub line 2 extended permit udp any4 host 50.50.50.50 eq 4500
+#
+# Public SSTP
+#access-list aovpnPub line 3 extended permit tcp host 50.50.50.50 eq https any4
+#access-list aovpnPub line 4 extended permit any4 host 50.50.50.50 eq https
+
+# Private IKEv2
+#access-list aovpnPriv line 2 extended permit udp any4 host 10.10.10.200 eq isakmp
+#access-list aovpnPriv line 3 extended permit udp any4 host 10.10.10.200 eq 4500
+#
+# Private SSTP
+#access-list aovpnPriv line 1 extended permit tcp any4 host 10.10.10.200 eq https
+#---------------------------------------------------------------
+#
 $DnsSuffix = (Get-CimInstance -ClassName Win32_ComputerSystem).Domain
 $ServerAddress = Read-Host -Prompt "Enter the public DNS name of your AOVPN Server EXAMPLE: aovpn.osbornepro.com"
 $NPSServer = Read-Host -Prompt "Enter the FQDN of your NPS server that will be authenticating the RADIUS requests EXAMPLE: nps-server.osbornepro.com"
