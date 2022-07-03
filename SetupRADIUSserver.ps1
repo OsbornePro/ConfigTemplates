@@ -1,3 +1,17 @@
+$Logo = @"
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
+https://osbornepro.com
+EMAIL: info@osbornepro.com
+"@
+Write-Output "$Logo"
 # Easily Invoke DC Replication to access newly created certificate tempaltes right away
 # LINK : https://github.com/tobor88/PowerShell/blob/master/Invoke-DCReplication.ps1
 
