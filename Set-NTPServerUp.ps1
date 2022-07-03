@@ -1,3 +1,18 @@
+$Logo = @"
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
+https://osbornepro.com
+EMAIL: info@osbornepro.com
+"@
+Write-Output "$Logo"
+
 $NTPReg = "HKLM:\SYSTEM\CurrentControlSet\Services\W32Time"
 
 Write-Output "[*] Enabling UDP port 123 on firewall for NTP connections"
