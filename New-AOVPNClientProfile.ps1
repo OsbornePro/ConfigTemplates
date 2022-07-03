@@ -4,7 +4,7 @@
 # 2.) If IKEv2 traffic is blocked or the connection fails it falls over to SSTP which uses HTTPS
 #
 # SUMMARY: 
-# I wrote this script because the Always on VPN client profile creation script Microsoft provided is garbage. Mine is better. 
+# I wrote this script because the Always on VPN client profile creation script Microsoft provided is short sighted. Mine is better. 
 # They use WMI objects which has created issues with Windows 11 and returns Access Denied errors in Windows 10
 # This script can build AOVPN profiles for unprivileges user accounts
 #
