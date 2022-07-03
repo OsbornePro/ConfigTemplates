@@ -1,6 +1,6 @@
 # CLIENT VPN PROFILE CREATED
 # ---------------------------
-# 1.) Uses IKEv2 UDP Connection to establish VPN connection with Certificate based authentication
+# 1.) Uses IKEv2 UDP Connection to establish VPN connection with Certificate based authentication with Split Tunneling
 # 2.) If IKEv2 traffic is blocked or the connection fails it falls over to SSTP which uses HTTPS
 #
 # SUMMARY: 
