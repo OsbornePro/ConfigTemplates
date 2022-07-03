@@ -10,6 +10,19 @@
 #theshadowking,\\ftp.osbornepro.com\FTPS\Legion,\,User
 # END CONTENTS OF UsersList.csv -----------------------
 #
+$Logo = @"
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
+"@
+Write-Output "$Logo"
+
 If (Test-Path -Path $env:USERPROFILE\Documents\UserList.csv) {
 
     Write-Output "[*] UserList.csv file has been found to exist"
