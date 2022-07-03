@@ -5,6 +5,7 @@ This is a collection of configuration files and configuration scripts that are g
 1. __tmux.conf__ Configuration file that can be used to start your Tmux configuration
 1. __1-ConfigureWindowsFTPS-CreateFTP-UsersAndGroup.ps1__ This script is meant to be run on a Domain Controller. It creates an FTP users and administrators group
 1. __2-ConfigureWindowsFTPS-ConfigureFTPoverSSLserver.ps1__ This script is meant to be run on a Windows Server 2019 FTPS server hosted through IIS
+1. __Cloudflare Dynamic DNS Update.ps1__ Script from Cloudflare that allows you to update your Dynamic DNS records automatically
 1. __Apache LDAPS Template for nagios.conf__ LDAP over SSL authentication configuration for Nagios Core on Apache
 1. __Bastillion LDAPS Tempalte for jaas.conf__ LDAP over SSL authentication configuration for Bastillion Servers
 1. __Configure-SFTP-Only.ps1__ Setup an SFTP server without SSH open on a Windows Server
