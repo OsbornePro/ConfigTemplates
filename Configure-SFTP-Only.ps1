@@ -21,6 +21,22 @@ If ((Test-Admin) -eq $False) {
     
 }  # End If
 
+
+$Logo = @"
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
+https://osbornepro.com
+EMAIL: info@osbornepro.com
+"@
+Write-Output "$Logo"
+
 $Domain = (Get-CimInstance -ClassName Win32_ComputerSystem).Domain
 $SFTPGroup = Read-Host -Prompt "Enter the name of the SFTP Security Group Allowing access to the SFTP Server. Do not include the domain. EXAMPLE: SFTP-Users"
 Write-Output "[*] Creating the local group $SFTPGroup"
