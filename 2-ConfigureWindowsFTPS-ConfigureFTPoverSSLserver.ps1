@@ -8,6 +8,7 @@
 # This script will select the SSL cert to use if it has a friendly name containing FTP and enable 128-bit encryption. It also enables basic auth for users to sign in
 # This script confiures isolation mode with Active Directory and allows you to set the IP address and passive ports for the firewall
 
+
 $Logo = @"
 ╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
 ║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
@@ -18,7 +19,10 @@ $Logo = @"
 ===============================
 If you can't beat `em tech `em!
 ===============================
+https://osbornepro.com
+EMAIL: info@osbornepro.com
 "@
+Write-Output "$Logo"
 
 Function Test-Admin {
 
