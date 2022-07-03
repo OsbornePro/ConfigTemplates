@@ -1,5 +1,18 @@
 # This script is used to install an LDAPS certificate in the NTDS Personal and AD LDS service name stores to update the LDAPS certificate 
-
+$Logo = @"
+╔═══╗░░╔╗░░░░░░░░░░░░╔═══╗░░░░░
+║╔═╗║░░║║░░░░░░░░░░░░║╔═╗║░░░░░
+║║░║╠══╣╚═╦══╦═╦═╗╔══╣╚═╝╠═╦══╗
+║║░║║══╣╔╗║╔╗║╔╣╔╗╣║═╣╔══╣╔╣╔╗║
+║╚═╝╠══║╚╝║╚╝║║║║║║║═╣║░░║║║╚╝║
+╚═══╩══╩══╩══╩╝╚╝╚╩══╩╝░░╚╝╚══╝
+===============================
+If you can't beat `em tech `em!
+===============================
+https://osbornepro.com
+EMAIL: info@osbornepro.com
+"@
+Write-Output "$Logo"
 # https://github.com/tobor88/PowerShell/blob/master/Hide-PowerShellScriptPassword.ps1
 $KeyPassword = "LDAPS-S3cr3t-Pa55w0rd" # I have a script at the above link you can use to encrypt this value so it does not show in clear text
 $SecurePassword = ConvertTo-SecureString -String $KeyPassword -Force –AsPlainText
