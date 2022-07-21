@@ -29,6 +29,7 @@ This is a collection of configuration files and configuration scripts that are g
 1. __fail2ban-apacheSSH-jail.local__ Configuration file template to use fail2ban to harden open apache and SSH ports
 1. __lighttpd-external.conf__ Configuration file to harden a lighttpd server hosting Pi-Hole
 1. __lighttpd-rejection.conf__ Configuration file to created WAF rules for a lighttpd server hosting a Pi-Hole
+1. __postfix-installer.sh__ This script is used to quickly set up a secure instance of Postfix on a Debian or Fedora OS. This does not include all the security features as the main.cf file below because of other outside factors that are not predictable. This does still set up secured SMTP server options.
 1. __postfix.main.cf__ Hardened Postfix Coniguration file main.cf that uses secure methods of sending emails from your local device 
 1. __smb.conf Anonymous SMB access Not Secure__ This Samba configuration file is one I used while performing offensive attacks, hosting payloads over SMB. DO NOT use this as a main configuration for any SMB servers in an enviornment as it is purposefully insecure
 1. __sshd_config__ Great starting place for configuring SSH in a secure manner. I have included/centralized setting descriptors for anyone who may not be familiar with the protocol
