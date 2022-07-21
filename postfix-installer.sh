@@ -129,7 +129,7 @@ echo "[${SMTPSERVER}]:${PORT} ${EMAIL}:${PASS}" > /etc/postfix/sasl/sasl_passwd
 postmap /etc/postfix/sasl/sasl_passwd
 if [ -f /etc/postfix/sasl/sasl_passwd.db ]; then
         printf "[*] Created encrypted password file sasl_passwd.db \n"
-#        rm -rf /etc/postfix/sasl/sasl_passwd
+        rm -rf /etc/postfix/sasl/sasl_passwd
 else
         printf "[!] Verify the file /etc/postfix/sasl/sasl_passwd.db \n"
         printf "[i] Delete the file /etc/posftix/sasl/sasl_passwd once verified \n"
