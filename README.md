@@ -33,6 +33,7 @@ This is a collection of configuration files and configuration scripts that are g
 1. __postfix.main.cf__ Hardened Postfix Coniguration file main.cf that uses secure methods of sending emails from your local device 
 1. __smb.conf Anonymous SMB access Not Secure__ This Samba configuration file is one I used while performing offensive attacks, hosting payloads over SMB. DO NOT use this as a main configuration for any SMB servers in an enviornment as it is purposefully insecure
 1. __sshd_config__ Great starting place for configuring SSH in a secure manner. I have included/centralized setting descriptors for anyone who may not be familiar with the protocol
+1. __vsftpd-installer.sh__ Bash script to install a secure instance of VSFTPD using FTP over SSL and a whitelisted user list
 1. __vsftpd.conf Anonymous Downloads__ FTP configuration for securely allowing anonymous users to only download files from a server
 1. __vsftpd.conf Anonymous Uploads__ FTP configuration for securely allowing anonymous users to only upload files to a server
 1. __vsftpd.conf for FTP over SSL__ FTP configuration for securely allowing authenticated users to upload or download files to an FTP server
