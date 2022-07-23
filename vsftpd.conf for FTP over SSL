@@ -107,7 +107,7 @@ data_connection_timeout=120
 # CHAR
 ascii_upload_enable=NO
 ascii_download_enable=NO
-utf8_filesystem=YES
+#utf8_filesystem=YES
 
 # BANNER
 ftpd_banner=OsbornePro LLC. FTP over SSL Server
