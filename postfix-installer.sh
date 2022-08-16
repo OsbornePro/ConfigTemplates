@@ -218,6 +218,11 @@ smtpd_tls_mandatory_protocols=!SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 smtpd_tls_protocols=!SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 smtpd_tls_mandatory_ciphers=high
 mime_header_checks = regexp:/etc/postfix/mime_header_checks
+
+sender_canonical_classes = envelope_sender, header_sender
+sender_canonical_maps =  regexp:/etc/postfix/sender_canonical_maps
+smtp_header_checks = regexp:/etc/postfix/header_check
+
 strict_rfc821_envelopes=yes
 EOF
 )
@@ -237,6 +242,8 @@ echo "root@localhost" >> /etc/postfix/generic
 echo "root@${HOSTNAME}.local" >> /etc/postfix/generic
 echo "root@${HOSTNAME} ${EMAIL}" >> /etc/postfix/generic
 echo "@${HOSTNAME} ${EMAIL}" >> /etc/postfix/generic
+echo "/.+/    ${EMAIL}" > /etc/postfix/sender_canonical_maps
+echo "/From:.*/ REPLACE From: ${EMAIL}" > /etc/postfix/header_check
 
 
 printf "[*] Securing permissions on the /etc/postfix/generic file \n"
