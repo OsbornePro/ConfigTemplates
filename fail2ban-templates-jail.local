@@ -1,8 +1,8 @@
-###############################################################################
-#                                 OsbornePro LLC.                             #
-#                Fail2Ban /etc/fail2ban/jail.local service tempaltes          #
-# Protect Apache, Nginx, SSH, PHP, SMTP/SASL, MariaDB/MySQL, VSFTPD, Lighttpd #
-###############################################################################
+############################################################################################
+#                                         OsbornePro LLC.                                  #
+#                       Fail2Ban /etc/fail2ban/jail.local service tempaltes                #
+# Protect Apache, Nginx, SSH, PHP, SMTP/SASL, MariaDB/MySQL, VSFTPD, Lighttpd, Bind9/Named #
+############################################################################################
 
 # Default action to take when not defined
 [DEFAULT]
@@ -233,6 +233,19 @@ filter    = mysqld-auth
 maxretry  = 3
 bantime   = 600
 logpath   = /var/log/mysql/mysql.log # Note this needs to be enabled in /etc/mysql/mariadb.conf.d/50-server.cnf configuration file
+destemail = you@domain.com
+sender    = alert@domain.com
+mta       = mail
+
+#########################################
+#              NAMED/BIND9              #
+#########################################
+[named-refused]
+enabled   = true
+port      = domain,953
+bantime   = 3600
+filter    = named-refused
+logpath   = /var/log/audit/audit.log
 destemail = you@domain.com
 sender    = alert@domain.com
 mta       = mail
