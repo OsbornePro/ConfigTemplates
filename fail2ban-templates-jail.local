@@ -1,0 +1,238 @@
+###############################################################################
+#                                 OsbornePro LLC.                             #
+#                Fail2Ban /etc/fail2ban/jail.local service tempaltes          #
+# Protect Apache, Nginx, SSH, PHP, SMTP/SASL, MariaDB/MySQL, VSFTPD, Lighttpd #
+###############################################################################
+
+# Default action to take when not defined
+[DEFAULT]
+action = iptables-allports
+	%(action_mw)s[from=Home\ Print, password="Password123!", destination=youremail@domain.com, sendername=Fail2Ban]
+ignoreip = 127.0.0.1 192.168.0.0/24
+
+#########################################
+#               APACHE                  #
+#########################################
+# detect password authentication failures
+[apache]
+enabled   = true
+port      = 80,443
+filter    = apache-auth
+logpath   = /var/log/apache*/*error.log
+maxretry  = 4
+bantime   = 3600
+action    = iptables-multiport[name=auth, port="80,443"]
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# detect spammer robots crawling email addresses
+[apache-badbots]
+enabled   = true
+port      = 80,443
+filter    = apache-badbots
+action    = iptables-multiport[name=badbots, port="80,443"]
+logpath   = /var/log/apache*/*error.log
+bantime   = 3600
+maxretry  = 1
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# detect potential search for exploits and php vulnerabilities
+[apache-noscript]
+enabled   = true
+port      = 80,443
+filter    = apache-noscript
+action    = iptables-multiport[name=noscript, port="80,443"]
+logpath   = /var/log/apache*/*error.log
+maxretry  = 5
+bantime   = 3600
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# detect Apache overflow attempts
+[apache-overflows]
+enabled   = true
+port      = 80,443
+filter    = apache-overflows
+action    = iptables-multiport[name=overflows, port="80,443"]
+logpath   = /var/log/apache*/*error.log
+maxretry  = 2
+bantime   = 3600
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# detect failures to find a home directory on a server
+[apache-nohome]
+enabled   = true
+port      = 80,443
+filter    = apache-nohome
+action    = iptables-multiport[name=nohome, port="80,443"]
+logpath   = /var/log/apache*/*error.log
+maxretry  = 2
+bantime   = 3600
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+#########################################
+#                NGINX                  #
+#########################################
+# prevent nginx multiple auth failures
+[nginx-http-auth]
+enabled   = true
+filter    = nginx-http-auth
+port      = 8080,4443
+action    = iptables-multiport[name=nginxauth, port="8080,4443"]
+logpath   = /var/log/nginx/error.log
+bantime   = 3600
+findtime  = 3600
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# prevent nginx noscript
+[nginx-noscript]
+enabled   = true
+filter    = nginx-noscript
+port      = 8080,4443
+logpath   = /var/log/nginx/access.log
+action    = iptables-multiport[name=nginxnoscript, port="8080,4443"]
+bantime   = 3600
+findtime  = 3600
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# prevent nginx badbots
+[nginx-badbots]
+enabled   = true
+filter    = nginx-badbots
+port      = 8080,4443
+logpath   = /var/log/nginx/access.log
+action    = iptables-multiport[name=nginxbadbots, port="8080,4443"]
+bantime   = 3600
+findtime  = 3600
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# Prevent nginx nohome
+[nginx-nohome]
+enabled   = true
+filter    = nginx-nohome
+port      = 8080,4443
+logpath   = /var/log/nginx/access.log
+action    = iptables-multiport[name=nginxnohome, port="8080,4443"]
+bantime   = 3600
+findtime  = 3600
+maxretry  = 2
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+# prevent nginx no proxy
+[nginx-noproxy]
+enabled   = true
+filter    = nginx-noproxy
+port      = 8080,4443
+logpath   = /var/log/nginx/access.log
+action    = iptables-multiport[name=nginxnoproxy, port="8080,4443"]
+bantime   = 3600
+findtime  = 3600
+maxretry  = 2
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+#########################################
+#                 SSH                   #
+#########################################
+# Prevent excess login attempts
+[sshd]
+filter    = sshd
+enabled   = true
+port      = 22
+bantime   = 1800
+maxretry  = 3
+banaction = iptables-allports
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+#########################################
+#              PHP/Apache               #
+#########################################
+[php-url-fopen]
+enabled   = true
+port      = 80,443
+filter    = php-url-fopen
+action    = iptables-multiport[name=phpurlfopen, port="80,443"]
+logpath   = /var/log/apache2/*access.log
+bantime   = 3600
+findtime  = 120
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+#########################################
+#           POSTFIX/SASL                #
+#########################################
+[sasl]
+enabled   = true
+port      = 25,143,465,587,993,995,2525 
+filter    = postfix-sasl
+#action   = iptables-multiport[name=postfixsasl, port="25,143,465,587,993,995,2525"]
+logpath   = /var/log/mail.log
+bantime   = 3600
+maxretry  = 5
+findtime  = 120
+destemail = you@domain.com
+sender    = alert@domain.com
+mta	      = mail
+
+#########################################
+#               LIGHTTPD                #
+#########################################
+# prevent failed lighttpd attempts
+[lighttpd-auth]
+enabled   = true
+port      = http,https
+filter    = lighttpd-auth
+logpath   = /var/log/lighttpd/error.log
+bantime   = 3600
+maxretry  = 4
+findtime  = 120
+destemail = you@domain.com
+sender    = alert@domain.com
+mta       = mail
+
+#########################################
+#               VSFTPD                  #
+#########################################
+[vsftpd]
+enabled   = true
+port      = 989,990
+filter    = vsftpd
+bantime   = 3600
+logpath   = /var/log/vsftpd.log 
+destemail = you@domain.com
+sender    = alert@domain.com
+mta       = mail
+
+#########################################
+#            MariaDB/MySQL              #
+#########################################
+[mysqld-auth]
+enabled   = true
+port      = 3306
+filter    = mysqld-auth
+maxretry  = 3
+bantime   = 600
+logpath   = /var/log/mysql/mysql.log # Note this needs to be enabled in /etc/mysql/mariadb.conf.d/50-server.cnf configuration file
+destemail = you@domain.com
+sender    = alert@domain.com
+mta       = mail
