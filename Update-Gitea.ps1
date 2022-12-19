@@ -7,7 +7,7 @@ $GiteaParentPath = "C:\gitea"
 $CurrentVersion = (."C:\gitea\gitea.exe" --version).ToString().Split(" ")[2]
 $GiteaServiceName = "gitea"
 
-If ($CurrentVersion -ne $NewVersionUrl) {
+If ($CurrentVersion -ne $NewVersion) {
 
     Write-Verbose -Message "Gitea not running the latest version"
 
