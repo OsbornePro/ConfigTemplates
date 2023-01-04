@@ -12,9 +12,9 @@ If you can't beat `em tech `em!
 https://osbornepro.com
 EMAIL: info@osbornepro.com
 "@
-Write-Output "$Logo"
-Write-Output "[*] This script is used to set up LAPS in your domain"
-
+Write-Output -InputObject "$Logo"
+Write-Output -InputObject "[*] This script is used to set up LAPS in your domain"
+$LapsShareDirectory = Read-Host -Prompt "Enter the directory to create to save your LAPS network share too. `nEXAMPLE: C:\LAPS"
 
 $PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
 If ("$Env:COMPUTERNAME.$env:USERDNSDOMAIN".ToLower() -ne $PDC.ToLower()) {
@@ -24,15 +24,16 @@ If ("$Env:COMPUTERNAME.$env:USERDNSDOMAIN".ToLower() -ne $PDC.ToLower()) {
 }  # End If
 
 
-Write-Output "Creating C:\LAPS directory to share on network and setting local folder permissions"
-New-Item -Path "C:\LAPS" –ItemType Directory -Force
-New-SMBShare -Name "LAPS" -Path "C:\LAPS"  -FullAccess "Administrators" -ChangeAccess "$env:USERDNSDOMAIN\Domain Admins"  -ReadAccess "$env:USERDNSDOMAIN\Domain Users"
+Write-Output -InputObject "Creating C:\LAPS directory to share on network and setting local folder permissions"
+New-Item -Path $LapsShareDirectory –ItemType Directory -Force
+New-SMBShare -Name "LAPS" -Path $LapsShareDirectory -FullAccess "Administrators" -ChangeAccess "$env:USERDNSDOMAIN\Domain Admins" -ReadAccess "$env:USERDNSDOMAIN\Domain Users"
 
 
 If (!(Test-Path -Path C:\Windows\PolicyDefinitions\AdmPwd.admx)) {
 
-    Write-Output "[x] You will need to run the install file LAPS.x64.msi which can be downloaded from the below link `n  - https://www.microsoft.com/en-us/download/confirmation.aspx?id=46899"
-    Read-Host "[!] Press ENTER to continue after you have downloaded and installed the LAPS.x64.msi file from the above link"
+    Write-Output -InputObject "[x] You will need to run the install file LAPS.x64.msi which can be downloaded from the below link `n  - https://www.microsoft.com/en-us/download/confirmation.aspx?id=46899"
+    Read-Host -Prompt "[!] Press ENTER to continue after you have downloaded and installed the LAPS.x64.msi file from the above link"
+    Read-Host -Prompt "[!] Press ENTER after saving the LAPS files like LAPS.x64.msi you downloaded to $LapsShareDirectory"
 
 }  # End If
 
@@ -40,42 +41,42 @@ If (!(Test-Path -Path C:\Windows\PolicyDefinitions\AdmPwd.admx)) {
 $Member = Get-ADPrincipalGroupMembership -Identity $env:USERNAME | Where-Object { $_.Name -eq "Schema Admins" }
 If (!($Member)) {
 
-    $Answer = Read-Host -Prompt "Would you like to add your current user to the 'Schema Admins' Active Directory group. This is required to update the AD Schema for LAPS usage? [y/N]"
+    $Answer = Read-Host -Prompt "[?] Would you like to add your current user to the 'Schema Admins' Active Directory group. This is required to update the AD Schema for LAPS usage? [y/N]"
     If ($Answer -like "*y*") {
 
-        Write-Output "[*] Adding $env:USERNAME to the 'Schema Admins' AD Security Group"
+        Write-Output -InputObject "[*] Adding $env:USERNAME to the 'Schema Admins' AD Security Group"
         Add-ADGroupMember -Identity "Schema Admins" -Members $env:USERNAME
-        Write-Warning "Please log out and log back in to obtain your new permissions!"
-        Throw "Log back in to obtain your new Schema Admin permissions"
+        Write-Warning -Message "Please log out and log back in to obtain your new permissions!"
+        Throw "[x] Log back in to obtain your new Schema Admin permissions"
 
     }  Else {
 
-        Throw "Schema can not be updated with the current user"
+        Throw "[x] Schema can not be updated with the current user"
 
     }  # End Else
 
 }  # End If
 
-Write-Output "[*] Updating AD Schema. You may need to restart before this works for the new permissions to apply to your current user"
+Write-Output -InputObject "[*] Updating AD Schema. You may need to restart before this works for the new permissions to apply to your current user"
 Update-AdmPwdADSchema
 
 
-Write-Output "[*] Below is a list of current LAPS extended rights permissions"
-Try { Find-AdmPwdExtendedRights -Identity "*" } Catch { Write-Verbose "This is here to prevent the error message expected from showing up"}
+Write-Output -InputObject "[*] Below is a list of current LAPS extended rights permissions"
+Try { Find-AdmPwdExtendedRights -Identity "*" } Catch { Write-Verbose -Message "This is here to prevent the error message expected from showing up"}
 
 Do {
 
-    $OU = Read-Host -Prompt "What is the name of the OU that contains your LAPS computers This is required for LAPS to work? EXAMPLE: Computers"
+    $OU = Read-Host -Prompt "[?] What is the name of the OU that contains your LAPS computers This is required for LAPS to work? EXAMPLE: Computers"
     If ($OU.Length -gt 1) {
 
         $DN = Get-ADObject -Filter {Name -like $OU} | Select-Object -ExpandProperty DistinguishedName
 
     }  # End If
 
-    Write-Output "[*] Updating the Active Directory Schema for LAPS"
+    Write-Output -InputObject "[*] Updating the Active Directory Schema for LAPS"
     Set-AdmPwdComputerSelfPermission -Identity $DN
 
-    $Done = "Would you like to add another OU for LAPS devices? [y/N]"
+    $Done = Read-Host -Prompt "[?] Would you like to add another OU for LAPS devices? [y/N]"
 
 } Until ($Done -like "*y*")
 
@@ -174,11 +175,11 @@ If ($Answer2 -like "*y*") {
 
     }  # End Function Set-SecureFilePermissions
 
-    Write-Output "[*] Downloading LAPS backup script and task file"
+    Write-Output -InputObject "[*] Downloading LAPS backup script and task file"
     (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.ps1", "C:\Users\Public\Documents\BackupLAPS.ps1")
     (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.xml", "C:\Users\Public\Documents\BackupLAPS.xml")
 
-    Write-Output "[*] Importing scheduled task to run as SYSTEM which backs up the LAPS password database on the last day of every month"
+    Write-Output -InputObject "[*] Importing scheduled task to run as SYSTEM which backs up the LAPS password database on the last day of every month"
     $Xml = Get-Content -Path "C:\Users\Public\Documents\BackupLAPS.xml" | Out-String
     Register-ScheduledTask -Xml $Xml -TaskName "Backup LAPS" -TaskPath "\" -User "SYSTEM" –Force
 
@@ -186,4 +187,4 @@ If ($Answer2 -like "*y*") {
 
 }  # End If
 
-Write-Output "[*] You have now updated the Active Directory Schema for LAPS and allowed devices to set their own AD Attribute 'ms-Mcs-AdmPwd' for updating passwords."
+Write-Output -InputObject "[*] You have now updated the Active Directory Schema for LAPS and allowed devices to set their own AD Attribute 'ms-Mcs-AdmPwd' for updating passwords."
