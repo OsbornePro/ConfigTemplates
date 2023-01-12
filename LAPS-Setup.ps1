@@ -42,7 +42,7 @@ $Member = Get-ADPrincipalGroupMembership -Identity $env:USERNAME | Where-Object 
 If (!($Member)) {
 
     $Answer = Read-Host -Prompt "[?] Would you like to add your current user to the 'Schema Admins' Active Directory group. This is required to update the AD Schema for LAPS usage? [y/N]"
-    If ($Answer -like "*y*") {
+    If ($Answer -like "y*") {
 
         Write-Output -InputObject "[*] Adding $env:USERNAME to the 'Schema Admins' AD Security Group"
         Add-ADGroupMember -Identity "Schema Admins" -Members $env:USERNAME
@@ -78,11 +78,11 @@ Do {
 
     $Done = Read-Host -Prompt "[?] Would you like to add another OU for LAPS devices? [y/N]"
 
-} Until ($Done -like "*y*")
+} Until ($Done -like "N*")
 
 
 $Answer2 = Read-Host -Prompt "Would you like to set up backups of LAPS password history? This will not exist otherwise [y/N]"
-If ($Answer2 -like "*y*") {
+If ($Answer2 -like "y*") {
 
     Function Set-SecureFilePermissions {
         [CmdletBinding()]
