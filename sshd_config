@@ -18,6 +18,10 @@ AddressFamily inet
 ListenAddress 0.0.0.0
 #ListenAddress ::
 
+# VULNERABILITY SETTING: https://www.stigviewer.com/stig/red_hat_enterprise_linux_7/2017-07-08/finding/V-72265
+# If the below setting is commented out or set to no it is a security finding. Depending on your OpenSSH version you will need to set this to sandbox or yes
+#UsePrivilegeSeparation sandbox
+#UsePrivilegeSeparation yes
 
 # Ciphers and keying
 HostKey /etc/ssh/ssh_host_rsa_key
@@ -155,8 +159,10 @@ AllowTcpForwarding yes
 
 GatewayPorts no
 
-
+# If UseLogin is set to yes it will disable X11Forwarding
+UseLogin no
 X11Forwarding yes
+
 # Enable this if I plan on using X11 to open applications on a remote device through SSH
 X11DisplayOffset 10
 X11UseLocalhost yes
@@ -217,7 +223,7 @@ Banner /etc/issue
 
 # Prevent ssh from advertising its version
 DebianBanner no
-
+ShowPatchLevel no
 
 # Allow client to pass locale environment variables
 AcceptEnv LANG LC_*
