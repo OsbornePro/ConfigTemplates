@@ -5,21 +5,25 @@
 #     sudo apt update && apt install -y vsftpd
 #
 # GENERATE CERTIFICATES IF YOU WISH TO USE SSL
-#     sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
+#     DEBIAN: sudo openssl req -x509 -nodes -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/certs/vsftpd.crt -days 365 -newkey rsa:2048
+#     REHL:   sudo openssl req -x509 -nodes -keyout /etc/pki/tls/private/vsftpd.pem -out /etc/pki/tls/certs/vsftpd.crt -days 365 -newkey rsa:2048
 #  NOTE: If you do want to use SSL be sure to comment out the SSL values at the end of CONFIGURED SETTINGS section below and make ssl_enable=NO
 #
 # CREATE DIRECTORY FOR ANONYMOUS USER TO DOWNLOAD FROM
 #     sudo mkdir -p /var/ftp/public
 #     sudo chown nobody:nogroup /var/ftp/public
 #     sudo useradd ftpsecure
-#     sudo touch /etc/vsftpd.email_passwords
-#     sudo vi /etc/vsftpd.email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
-#     sudo chmod 640 /etc/vsftpd.email_passwords
+#     sudo touch /etc/vsftpd/email_passwords
+#     sudo vi /etc/vsftpd/email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
+#     sudo chmod 640 /etc/vsftpd/email_passwords
 #
 # DOWNLOAD AND USE THIS CONFIGURATION FILE
-#     sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
-#     sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Downloads -O /etc/vsftpd.conf
-#     sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd.conf file at /etc/vsftpd.conf.bak"
+#     DEBIAN: sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
+#     RHEL:   sudo mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd/vsftpd.conf file at /etc/vsftpd/vsftpd.conf.orig"
+#     DEBINA: sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Downloads -O /etc/vsftpd.conf
+#     RHEL:   sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Downloads -O /etc/vsftpd/vsftpd.conf
+#     DEBINA: sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd.conf file at /etc/vsftpd.conf.bak"
+#     RHEL:   sudo cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd/vsftpd.conf file at /etc/vsftpd/vsftpd.conf.bak"
 #
 # CONFIGURE FIREWALL RULES TO ALLOW FTP USING WHATEVER FIREWALL YOu USe
 #   FIREWALL-CMD
