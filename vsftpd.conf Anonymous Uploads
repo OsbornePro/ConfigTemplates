@@ -19,14 +19,20 @@
 #     sudo chmod 664 /var/ftp/public
 #     sudo chmod a+w /var/ftp/public/files
 #     sudo useradd ftpsecure
-#     sudo touch /etc/vsftpd.email_passwords
-#     sudo vi /etc/vsftpd.email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
-#     sudo chmod 640 /etc/vsftpd.email_passwords
+#     DEBIAN: sudo touch /etc/vsftpd.email_passwords
+#     DEBIAN: sudo vim /etc/vsftpd.email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
+#     DEBINA: sudo chmod 640 /etc/vsftpd.email_passwords
+#     RHEL: sudo touch /etc/vsftpd/email_passwords
+#     RHEL: sudo vim /etc/vsftpd/email_passwords # PLACE EMAIL ADDRESSES IN THIS FILE THAT CAN BE USED AS PASSWORDS TO SIGN IN WITH ANONYMOUS ACCESS
+#     RHEL: sudo chmod 640 /etc/vsftpd/email_passwords
 #
 # DOWNLOAD AND USE THIS CONFIGURATION FILE
-#     sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
-#     sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Uploads -O /etc/vsftpd.conf
-#     sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd.conf file at /etc/vsftpd.conf.bak"
+#     DEBIAN: sudo mv /etc/vsftpd.conf /etc/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd.conf file at /etc/vsftpd.conf.orig"
+#     DEBIAN: sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Uploads -O /etc/vsftpd.conf
+#     DEBIAN: sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd.conf file at /etc/vsftpd.conf.bak"
+#     RHEL: sudo mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.orig && echo "[*] Created backup of original /etc/vsftpd/vsftpd.conf file at /etc/vsftpd/vsftpd.conf.orig"
+#     RHEL: sudo wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/vsftpd.conf%20Anonymous%20Uploads -O /etc/vsftpd/vsftpd.conf
+#     RHEL: sudo cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.bak && echo "[*] Create backup of active /etc/vsftpd/vsftpd.conf file at /etc/vsftpd/vsftpd.conf.bak"
 #
 # CONFIGURE FIREWALL RULES TO ALLOW FTP USING WHATEVER FIREWALL YOu USe
 #   FIREWALL-CMD
