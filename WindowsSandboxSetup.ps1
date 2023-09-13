@@ -98,4 +98,4 @@ None
     }  # End ForEach
 
     Set-Location -Path "$env:ProgramFiles\Sysmon" -Verbose:$False
-    .\sysmon.exe /accepteula /i sysmon-config.xml
+    .\sysmon.exe /accepteula /i .\sysmon-config.xml
