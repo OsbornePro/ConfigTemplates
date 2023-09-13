@@ -22,7 +22,7 @@ PS> .\WindowsSandboxSetup.ps1 -DownloadDirectory "$env:USERPROFILE\Downloads"
 # This example downloads security tools into your Downloads directory
 
 .EXAMPLE
-Invoke-Expression -Command (New-Object -TypeName System.Net.WebClient).downloadString('https://raw.githubusercontent.com/OsbornePro/ConfigTempltaes/master/WindowsSandboxSetup.ps1')
+Invoke-Expression -Command (New-Object -TypeName System.Net.WebClient).downloadString('https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/main/WindowsSandboxSetup.ps1')
 # This example downloads security tools into your Downloads directory by executing the script existing in GitHub
 
 
