@@ -99,3 +99,10 @@ None
 
     Set-Location -Path "$env:ProgramFiles\Sysmon" -Verbose:$False
     .\sysmon.exe /accepteula /i .\sysmon-config.xml
+
+    $SysmonInstalled = Get-WinEvent -FilterHashtable @{LogName="Microsoft-Windows-Sysmon/Operational"; Id=16; StartTime=(Get-Date).AddHours(-1)}
+    If (!($SysmonInstalled)) {
+    
+        Invoke-Expression -Command '.\sysmon.exe /accepteula /i .\sysmon-config.xml'
+
+    }  # End If
