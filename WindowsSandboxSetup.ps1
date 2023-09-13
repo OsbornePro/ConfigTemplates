@@ -98,4 +98,4 @@ None
     }  # End ForEach
 
     Set-Location -Path "$env:ProgramFiles\Sysmon" -Verbose:$False
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList @("/c", "$env:ProgramFiles\Sysmon\sysmon.exe", "/accepteula", "/i", "sysmon-config.xml")
+    .\sysmon.exe /accepteula /i sysmon-config.xml
