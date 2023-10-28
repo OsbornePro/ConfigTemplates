@@ -14,7 +14,7 @@ EMAIL: info@osbornepro.com
 "@
 Write-Output -InputObject "$Logo"
 Write-Output -InputObject "[*] This script is used to set up LAPS in your domain"
-$LapsShareDirectory = Read-Host -Prompt "Enter the directory to create to save your LAPS network share too. `nEXAMPLE: C:\LAPS"
+$LapsShareDirectory = "$((Get-CimInstance -Class Win32_Share -Filter "Type=0 and Name LIKE 'NETLOGON'").Path)\LAPS"
 
 $PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
 If ("$Env:COMPUTERNAME.$env:USERDNSDOMAIN".ToLower() -ne $PDC.ToLower()) {
@@ -24,9 +24,9 @@ If ("$Env:COMPUTERNAME.$env:USERDNSDOMAIN".ToLower() -ne $PDC.ToLower()) {
 }  # End If
 
 
-Write-Output -InputObject "Creating C:\LAPS directory to share on network and setting local folder permissions"
-New-Item -Path $LapsShareDirectory –ItemType Directory -Force
-New-SMBShare -Name "LAPS" -Path $LapsShareDirectory -FullAccess "Administrators" -ChangeAccess "$env:USERDNSDOMAIN\Domain Admins" -ReadAccess "$env:USERDNSDOMAIN\Domain Users"
+Write-Output -InputObject "[*] Creating $LapsShareDirectory directory to share on network and setting local folder permissions"
+New-Item -Path $LapsShareDirectory –ItemType Directory -Force -ErrorAction Stop | Out-Null
+New-SMBShare -Name "LAPS" -Path $LapsShareDirectory -FullAccess "Administrators" -ChangeAccess "$env:USERDNSDOMAIN\Domain Admins" -ReadAccess "$env:USERDNSDOMAIN\Domain Users" | Out-Null
 
 
 If (!(Test-Path -Path C:\Windows\PolicyDefinitions\AdmPwd.admx)) {
@@ -38,15 +38,15 @@ If (!(Test-Path -Path C:\Windows\PolicyDefinitions\AdmPwd.admx)) {
 }  # End If
 
 
-$Member = Get-ADPrincipalGroupMembership -Identity $env:USERNAME | Where-Object { $_.Name -eq "Schema Admins" }
+$Member = Get-ADPrincipalGroupMembership -Identity $env:USERNAME | Where-Object -FilterScript { $_.Name -eq "Schema Admins" }
 If (!($Member)) {
 
     $Answer = Read-Host -Prompt "[?] Would you like to add your current user to the 'Schema Admins' Active Directory group. This is required to update the AD Schema for LAPS usage? [y/N]"
     If ($Answer -like "y*") {
 
         Write-Output -InputObject "[*] Adding $env:USERNAME to the 'Schema Admins' AD Security Group"
-        Add-ADGroupMember -Identity "Schema Admins" -Members $env:USERNAME
-        Write-Warning -Message "Please log out and log back in to obtain your new permissions!"
+        Add-ADGroupMember -Identity "Schema Admins" -Members $env:USERNAME -Verbose:$False
+        Write-Warning -Message "[!] Please log out and log back in to obtain your new permissions!"
         Throw "[x] Log back in to obtain your new Schema Admin permissions"
 
     }  Else {
@@ -81,10 +81,10 @@ Do {
 } Until ($Done -like "N*")
 
 
-$Answer2 = Read-Host -Prompt "Would you like to set up backups of LAPS password history? This will not exist otherwise [y/N]"
+$Answer2 = Read-Host -Prompt "[?] Would you like to set up backups of LAPS password history? This will not exist otherwise [y/N]"
 If ($Answer2 -like "y*") {
 
-    Function Set-SecureFilePermissions {
+    Function Set-SecureFilePermission {
         [CmdletBinding()]
             param(
                 [Parameter(
@@ -115,9 +115,9 @@ If ($Answer2 -like "y*") {
 
         If ($ComputerName -eq $env:COMPUTERNAME) {
 
-            Write-Verbose "Modifying access rule proteciton"
+            Write-Verbose -Message "[v] Modifying access rule proteciton"
 
-            $Acl = Get-Acl -Path "$Path"
+            $Acl = Get-Acl -Path "$Path" -Verbose:$False
             $Acl.SetAccessRuleProtection($True, $False)
 
             ForEach ($U in $Username) {
@@ -131,7 +131,7 @@ If ($Answer2 -like "y*") {
 
             }  # End ForEach
 
-            Write-Verbose "Changing the owner of $Path to $Owner"
+            Write-Verbose -Message "[v] Changing the owner of $Path to $Owner"
 
             $Acl.SetOwner((New-Object -TypeName System.Security.Principal.NTAccount("$Owner")))
             $Acl | Set-Acl -Path "$Path"
@@ -146,9 +146,9 @@ If ($Answer2 -like "y*") {
                     $Path = $Args[1]
                     $Owner = $Args[2]
 
-                    Write-Verbose "Modifying access rule proteciton"
+                    Write-Verbose -Message "[v] Modifying access rule proteciton"
 
-                    $Acl = Get-Acl -Path "$Path"
+                    $Acl = Get-Acl -Path "$Path" -Verbose:$False
                     $Acl.SetAccessRuleProtection($True, $False)
 
                     ForEach ($U in $Username) {
@@ -165,7 +165,7 @@ If ($Answer2 -like "y*") {
                     Write-Verbose "Changing the owner of $Path to $Owner"
 
                     $Acl.SetOwner((New-Object -TypeName System.Security.Principal.NTAccount("$Owner")))
-                    $Acl | Set-Acl -Path "$Path"
+                    $Acl | Set-Acl -Path "$Path" -Verbose:$False -WhatIf:$False
 
                 }  # End Invoke-Command
 
@@ -173,17 +173,17 @@ If ($Answer2 -like "y*") {
 
         }  # End Else
 
-    }  # End Function Set-SecureFilePermissions
+    }  # End Function Set-SecureFilePermission
 
     Write-Output -InputObject "[*] Downloading LAPS backup script and task file"
-    (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.ps1", "C:\Users\Public\Documents\BackupLAPS.ps1")
-    (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.xml", "C:\Users\Public\Documents\BackupLAPS.xml")
+    (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.ps1", "C:\Windows\Tasks\BackupLAPS.ps1")
+    (New-Object -TypeName System.Net.WebClient).downloadFile("https://raw.githubusercontent.com/OsbornePro/BackupScripts/main/BackupLAPS.xml", "C:\Windows\Tasks\BackupLAPS.xml")
 
     Write-Output -InputObject "[*] Importing scheduled task to run as SYSTEM which backs up the LAPS password database on the last day of every month"
-    $Xml = Get-Content -Path "C:\Users\Public\Documents\BackupLAPS.xml" | Out-String
+    $Xml = Get-Content -Path "C:\Windows\Tasks\BackupLAPS.xml" | Out-String
     Register-ScheduledTask -Xml $Xml -TaskName "Backup LAPS" -TaskPath "\" -User "SYSTEM" –Force
 
-    Set-SecureFilePermissions -Username 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators' -Path C:\DB -Owner 'SYSTEM'
+    Set-SecureFilePermission -Username 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators' -Path $LapsShareDirectory -Owner 'SYSTEM'
 
 }  # End If
 
