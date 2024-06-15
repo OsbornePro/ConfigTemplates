@@ -37,3 +37,4 @@ This is a collection of configuration files and configuration scripts that are g
 1. __vsftpd.conf Anonymous Downloads__ FTP configuration for securely allowing anonymous users to only download files from a server
 1. __vsftpd.conf Anonymous Uploads__ FTP configuration for securely allowing anonymous users to only upload files to a server
 1. __vsftpd.conf for FTP over SSL__ FTP configuration for securely allowing authenticated users to upload or download files to an FTP server
+1. __.vimrc configuraiton for vim that I find help make vim more useful to me
