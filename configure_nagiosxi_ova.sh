@@ -289,7 +289,7 @@ rm -rf -- /etc/httpd/conf.d/welcome.conf
 
 # Configure mod_security rules
 log_message "INFO" "Configuring mod_security rules."
-cat <<EOL >> "$MODSEC_RULES_PATH"
+cat <<EOL > "$MODSEC_RULES_PATH"
 <LocationMatch .*>
   <IfModule mod_security2.c>
     SecRuleRemoveById 981203
