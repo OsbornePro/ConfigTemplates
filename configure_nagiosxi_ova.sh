@@ -371,7 +371,7 @@ fi
 log_message "INFO" "Setting user passwords."
  echo "root:${ROOT_PASSWORD}" | chpasswd
  echo " ${ROOT_PASSWORD}"  # Password output for password manager
-chsh -s /usr/sbin/nologin root
+usermod -s /usr/sbin/nologin root
  echo "${ADMIN_USER}:${USER_PASSWORD}" | chpasswd
  echo " ${USER_PASSWORD}"  # Password output for password manager
 
