@@ -151,7 +151,7 @@ dnf -y update || { log_message "ERROR" "System update failed."; exit 1; }
 
 # Install required packages
 log_message "INFO" "Installing required packages."
-dnf install -y vim mlocate epel-release mod_security mod_ssl policycoreutils-python-utils aide scap-security-guide tuned auditd || {
+dnf install -y vim mlocate epel-release mod_security mod_ssl policycoreutils-python-utils aide scap-security-guide tuned audit || {
     log_message "ERROR" "Failed to install required packages."
     exit 1
 }
