@@ -194,6 +194,7 @@ done
 
 # Used the recommended tuned profile
 log_message "INFO" "Using the recommended tuned-adm profile $(tuned-adm recommend)."
+systemctl start tuned
 systemctl enable --now tuned
 tuned-adm profile $(tuned-adm recommend)
 
@@ -364,7 +365,7 @@ chsh -s /usr/sbin/nologin root
 
 # Configure Nagios admin password
 log_message "INFO" "Configuring Nagios admin password."
-htpasswd -b /usr/local/nagios/etc/htpasswd.users nagiosadmin "$NAGIOSADMIN_PASSWORD"
+ /usr/local/nagiosxi/scripts/reset_nagiosadmin_password.php --password="$NAGIOSADMIN_PASSWORD"
  echo " ${NAGIOSADMIN_PASSWORD}"  # Password output for password manager
 
 log_message "INFO" "Ensuring run level is multi-user."
