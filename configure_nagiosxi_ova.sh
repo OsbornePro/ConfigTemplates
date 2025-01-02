@@ -270,7 +270,7 @@ mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
 # Configure Apache to use HTTPS
 set_or_update_httpd_ssl_setting "ServerTokens" "Prod" "$HTTPD_CONF"
 set_or_update_httpd_ssl_setting "ServerSignature" "Off" "$HTTPD_CONF"
-set_or_update_httpd_ssl_setting "TraceEnable" "Off" "$HTTPD_CONF"
+set_or_update_httpd_ssl_setting "TraceEnable" "Off" "/etc/httpd/conf.d/nagiosxi.conf"
 set_or_update_httpd_ssl_setting "Header always set X-Content-Type-Options" "\"nosniff\"" "$SSL_CONF"
 set_or_update_httpd_ssl_setting "Header always set X-Frame-Options" "\"SAMEORIGIN\"" "$SSL_CONF"
 set_or_update_httpd_ssl_setting "SSLProtocol" "All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1" "$SSL_CONF"
@@ -283,6 +283,9 @@ log_message "INFO" "SSL configuration has been updated."
 
 # Create HTML custom error pages
 create_error_pages
+
+# Delete default welcome page which gives away version if ever exposed
+rm -rf -- /etc/httpd/conf.d/welcome.conf
 
 # Configure mod_security rules
 log_message "INFO" "Configuring mod_security rules."
