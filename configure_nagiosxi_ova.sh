@@ -207,7 +207,7 @@ for user in *; do
         else
             echo "umask 077" > "$user_bashrc"
         fi
-                if ! grep -q "^${editor_config}" "$user_bashrc"; then
+        if ! grep -q "^${editor_config}" "$user_bashrc"; then
             echo "$editor_config" >> "$user_bashrc"
         fi
         if ! grep -q "^${visual_config}" "$user_bashrc"; then
@@ -218,6 +218,12 @@ for user in *; do
         log_message "INFO" "Permissions set to 700 for /home/$user, umask configured in .bashrc"
     fi
 done
+if ! grep -q "^${editor_config}" /etc/skel/.bashrc; then
+    echo "$editor_config" >> /etc/skel/.bashrc
+fi
+if ! grep -q "^${visual_config}" /etc/skel/.bashrc; then
+    echo "$visual_config" >> /etc/skel/.bashrc
+fi
 
 # Used the recommended tuned profile
 log_message "INFO" "Using the recommended tuned-adm profile $(tuned-adm recommend)."
