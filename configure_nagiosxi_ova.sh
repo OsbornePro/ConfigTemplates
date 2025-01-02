@@ -61,26 +61,37 @@ create_error_pages() {
         424 425 426 428 429 431 451 500 501 502 503
         504 505 506 507 508 510 511
     )
-    local output_dir="/var/www/html/errors"
+    local output_dir="/usr/local/nagios/share/errors"
     mkdir -p "$output_dir"
     for code in "${error_codes[@]}"; do
         local file_path="$output_dir/$code.html"
-        echo "ErrorDocument $code /errors/$code.html" >> /etc/httpd/conf/httpd.conf
+        # echo "ErrorDocument $code /errors/$code.html" >> /etc/httpd/conf/httpd.conf
         if ! printf '<h1>Error %s</h1>\n' "$code" > "$file_path"; then
             printf '[x] Failed to create error page for code: %s\n' "$code" >&2
             return 1
         fi
     done
+    chown -R nagios:nagios ${output_dir}/
     printf '[*] Error pages created in %s\n' "$output_dir"
 }
 
 # Ensure script is run as root
 if [[ $EUID -ne 0 ]]; then
-    echo "[x] This script must be run as root. Use sudo."
+    log_message "ERROR" "This script must be run as root. Use sudo."
     exit 1
 fi
-
 log_message "INFO" "====== Preparing the Host for NagiosXI ======"
+
+# Update the system
+log_message "INFO" "Updating the OS to the latest versions."
+dnf -y update || { log_message "ERROR" "System update failed."; exit 1; }
+
+# Install required packages
+log_message "INFO" "Installing required packages."
+dnf install -y vim mlocate epel-release mod_security mod_ssl policycoreutils-python-utils aide scap-workbench scap-security-guide tuned audit || {
+    log_message "ERROR" "Failed to install required packages."
+    exit 1
+}
 
 # Prompt for input values
 read -p "[?] Enter the Virtual Hostname (VHOST name) (e.g., nagiosxi.contoso.com): " VHOST_NAME
@@ -106,7 +117,7 @@ NAGIOSADMIN_PASSWORD=$(generate_password)
 ADMIN_USER="nagiosadmin"
 HTTPD_VHOST_CONF="/etc/httpd/conf.d/vhost.conf"
 HTTPD_SECURITY_CONF="/etc/httpd/conf.d/security.conf"
-MODSEC_RULES_PATH="/etc/httpd/modsecurity.conf.d/mod_security_excluded_rules.conf"
+MODSEC_RULES_PATH="/etc/httpd/modsecurity.d/mod_security_excluded_rules.conf"
 
 # Local Variables
 editor_config="export EDITOR=vim"
@@ -171,17 +182,6 @@ else
 fi
 log_message "INFO" "Restarting systemd-journald service"
 systemctl restart systemd-journald
-
-# Update the system
-log_message "INFO" "Updating the OS to the latest versions."
-dnf -y update || { log_message "ERROR" "System update failed."; exit 1; }
-
-# Install required packages
-log_message "INFO" "Installing required packages."
-dnf install -y vim mlocate epel-release mod_security mod_ssl policycoreutils-python-utils aide scap-workbench scap-security-guide tuned audit || {
-    log_message "ERROR" "Failed to install required packages."
-    exit 1
-}
 
 # Configure /etc/skel for new users
 curl -k https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/refs/heads/main/.vimrc -o /etc/skel/.vimrc || wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/refs/heads/main/.vimrc -o /etc/skel/.vimrc
@@ -314,8 +314,7 @@ EOL
 
 # Configure mod_security rules
 log_message "INFO" "Configuring mod_security rules."
-mkdir -p "$(dirname "$MODSEC_RULES_PATH")"
-cat <<EOL > "$MODSEC_RULES_PATH"
+cat <<EOL >> "$MODSEC_RULES_PATH"
 <LocationMatch .*>
   <IfModule mod_security2.c>
     SecRuleRemoveById 981203
