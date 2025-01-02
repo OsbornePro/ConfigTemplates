@@ -6,6 +6,7 @@
 #-------------------------------------------------------------------------------
 # 1.) Download your NagiosXI image from https://www.nagios.com/products/nagios-xi/downloads/#downloads
 # 2.) Login to the image you setup and run this script
+# 3.) Save the passwords printed out at the end so you can use them to login
 
 # Trap signals and clean up
 trap 'echo "[x] Script interrupted. Exiting."; exit 1' INT TERM
