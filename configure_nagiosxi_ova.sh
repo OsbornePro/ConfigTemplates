@@ -7,6 +7,7 @@
 # 1.) Download your NagiosXI image from https://www.nagios.com/products/nagios-xi/downloads/#downloads
 # 2.) Login to the image you setup and run this script
 # 3.) Save the passwords printed out at the end so you can use them to login
+# NOTE: SELinux is unable to be turned on in the NagiosXI OVA file so I commented those parts out in this script
 
 # Trap signals and clean up
 trap 'echo "[x] Script interrupted. Exiting."; exit 1' INT TERM
@@ -51,6 +52,21 @@ configure_selinux_context() {
         log_message "ERROR" "Failed to apply SELinux context for $path."
         exit 1
     }
+}
+
+# Function to set apache configuration settings
+set_or_update_httpd_ssl_setting() {
+    local setting="$1"
+    local value="$2"
+    local file="$3"
+
+    if grep -qE "^${setting}\b" "$file"; then
+        sed -i "s|^${setting}.*|${setting} ${value}|" "$file"
+        echo "Updated: ${setting} ${value}"
+    else
+        echo "${setting} ${value}" >> "$file"
+        echo "Added: ${setting} ${value}"
+    fi
 }
 
 # Function to create error pages
@@ -115,10 +131,9 @@ ROOT_PASSWORD=$(generate_password)
 USER_PASSWORD=$(generate_password)
 NAGIOSADMIN_PASSWORD=$(generate_password)
 ADMIN_USER="nagiosadmin"
-HTTPD_VHOST_CONF="/etc/httpd/conf.d/vhost.conf"
-HTTPD_SECURITY_CONF="/etc/httpd/conf.d/security.conf"
+SSL_CONF="/etc/httpd/conf.d/ssl.conf"
+HTTPD_CONF="/etc/httpd/conf/httpd.conf"
 MODSEC_RULES_PATH="/etc/httpd/modsecurity.d/mod_security_excluded_rules.conf"
-
 # Local Variables
 editor_config="export EDITOR=vim"
 visual_config="export VISUAL=vim"
@@ -183,6 +198,9 @@ fi
 log_message "INFO" "Restarting systemd-journald service"
 systemctl restart systemd-journald
 
+log_message "INFO" "Ensuring run level is multi-user."
+systemctl set-default multi-user.target
+
 # Configure /etc/skel for new users
 curl -k https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/refs/heads/main/.vimrc -o /etc/skel/.vimrc || wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/refs/heads/main/.vimrc -o /etc/skel/.vimrc
 cd /etc/skel
@@ -226,91 +244,44 @@ if ! grep -q "^${visual_config}" /etc/skel/.bashrc; then
     echo "$visual_config" >> /etc/skel/.bashrc
 fi
 
+# Ensure auditd logging is enabled
+systemctl enable --now auditd
+
 # Used the recommended tuned profile
 log_message "INFO" "Using the recommended tuned-adm profile $(tuned-adm recommend)."
 systemctl start tuned
 systemctl enable --now tuned
 tuned-adm profile $(tuned-adm recommend)
 
-# Perform regular security audits
-log_message "INFO" "Running OpenSCAP scan"
+# Perform security audits
+log_message "INFO" "Running OpenSCAP scan in background. Saving results to $OSCAP_DIR"
 mkdir -p $OSCAP_DIR
 cd $OSCAP_DIR
 umask 066
 cd -
-oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_stig --results ${OSCAP_DIR}/scan.xml /usr/share/xml/scap/ssg/content/ssg-c*-ds.xml
+oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_stig --results "${OSCAP_DIR}/scan.xml" /usr/share/xml/scap/ssg/content/ssg-c*-ds.xml > /dev/null 2>&1 &
 
 # Setup Intrusition Protection and Monitoring
 log_message "INFO" "Initializing 'Aide' Intrusion detection and monitoring."
 aide --init
 mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
 
-# Configure Apache headers
-log_message "INFO" "Configuring Apache headers."
-cat <<EOL > $HTTPD_SECURITY_CONF
-# Hide Apache version information
-ServerTokens Prod
-ServerSignature Off
+# Configure Apache to use HTTPS
+set_or_update_httpd_ssl_setting "ServerTokens" "Prod" "$HTTPD_CONF"
+set_or_update_httpd_ssl_setting "ServerSignature" "Off" "$HTTPD_CONF"
+set_or_update_httpd_ssl_setting "TraceEnable" "Off" "$HTTPD_CONF"
+set_or_update_httpd_ssl_setting "Header always set X-Content-Type-Options" "\"nosniff\"" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "Header always set X-Frame-Options" "\"SAMEORIGIN\"" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "SSLProtocol" "All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "SSLCipherSuite" "HIGH:!aNULL:!MD5:!3DES" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "SSLHonorCipherOrder" "On" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "SSLEngine" "on" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "SSLCertificateFile" "/etc/httpd/ssl/server.crt" "$SSL_CONF"
+set_or_update_httpd_ssl_setting "SSLCertificateKeyFile" "/etc/httpd/ssl/server.key" "$SSL_CONF"
+log_message "INFO" "SSL configuration has been updated."
 
-# Disable TRACE HTTP method
-TraceEnable Off
-
-# Enable X-Content-Type-Options header
-Header always set X-Content-Type-Options "nosniff"
-
-# Enable X-Frame-Options header
-Header always set X-Frame-Options "SAMEORIGIN"
-
-# Enable HSTS (HTTP Strict Transport Security)
-#Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-
-# Disable weak protocols and ciphers
-SSLProtocol All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
-SSLCipherSuite HIGH:!aNULL:!MD5:!3DES
-SSLHonorCipherOrder On
-EOL
-
-# Configure Apache headers
-log_message "INFO" "Configuring Apache SSL settings."
-cat <<EOL > $HTTPD_VHOST_CONF
-# Redirect HTTP (port 80) to HTTPS
-<VirtualHost *:80>
-    # Set the ServerName for the redirect target
-    ServerName {{VHOST_NAME}}
-    # Redirect all traffic to HTTPS
-    Redirect permanent / https://{{VHOST_NAME}}/
-</VirtualHost>
-
-# Secure HTTPS VirtualHost
-<VirtualHost *:443>
-    # ServerName for the HTTPS site
-    ServerName {{VHOST_NAME}}
-
-    # SSL Configuration
-    SSLEngine on
-    SSLCertificateFile /etc/httpd/ssl/server.crt
-    SSLCertificateKeyFile /etc/httpd/ssl/server.key
-
-    # Strong SSL/TLS protocols and ciphers
-    SSLProtocol All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
-    SSLCipherSuite HIGH:!aNULL:!MD5:!3DES
-    SSLHonorCipherOrder On
-
-    # Document Root
-    DocumentRoot /usr/local/nagios/share
-
-    # Ensure requests match ServerName
-    <Directory "/usr/local/nagios/share">
-        Options None
-        AllowOverride None
-        Require all granted
-    </Directory>
-
-    # Log files
-    ErrorLog /var/log/httpd/nagiosxi_error.log
-    CustomLog /var/log/httpd/nagiosxi_access.log combined
-</VirtualHost>
-EOL
+# Create HTML custom error pages
+create_error_pages
 
 # Configure mod_security rules
 log_message "INFO" "Configuring mod_security rules."
@@ -357,37 +328,40 @@ cat <<EOL >> "$MODSEC_RULES_PATH"
 </LocationMatch>
 EOL
 
+log_message "INFO" "Testing Apache configuration"
+if apachectl configtest; then
+    log_message "INFO" "Apache configuration is valid. Restarting httpd"
+    systemctl restart httpd
+    log_message "INFO" "Apache restarted successfully"
+else
+    log_message "ERROR" "Apache configuration test failed. Use systemctl and journal to see what is wrong"
+fi
+
+# NOTE: The NagiosXI Image does not appear to allow you to use SELinux
 # Configure SELinux policies
-log_message "INFO" "Configuring SELinux policies."
-configure_selinux_boolean httpd_can_network_connect 1
-configure_selinux_boolean httpd_enable_cgi 1
-configure_selinux_boolean httpd_can_network_connect_db 1
-configure_selinux_boolean httpd_can_connect_ldap 1
+#log_message "INFO" "Configuring SELinux policies."
+#configure_selinux_boolean httpd_can_network_connect 1
+#configure_selinux_boolean httpd_enable_cgi 1
+#configure_selinux_boolean httpd_can_network_connect_db 1
+#configure_selinux_boolean httpd_can_connect_ldap 1
 #configure_selinux_boolean httpd_can_sendmail 1
 # Use Microsoft OAuth to send emails not sendmail
 
-
-if [ -d "/usr/local/nagios" ]; then
-    configure_selinux_context "/usr/local/nagios(/.*)?" "httpd_sys_content_t"
-    configure_selinux_context "/usr/local/nagios/var(/.*)?" "httpd_sys_rw_content_t"
-    configure_selinux_context "/var/www/html/ssl(/.*)?" "httpd_sys_content_t"
-    configure_selinux_context "/usr/local/nagiosxi(/.*)?" "httpd_sys_content_t"
-else
-    echo "[!] Directory /usr/local/nagios does not exist. Skipping SELinux relabeling."
-fi
+#if [ -d "/usr/local/nagios" ]; then
+#    configure_selinux_context "/usr/local/nagios(/.*)?" "httpd_sys_content_t"
+#    configure_selinux_context "/usr/local/nagios/var(/.*)?" "httpd_sys_rw_content_t"
+#    configure_selinux_context "/var/www/html/ssl(/.*)?" "httpd_sys_content_t"
+#    configure_selinux_context "/usr/local/nagiosxi(/.*)?" "httpd_sys_content_t"
+#else
+#    echo "[!] Directory /usr/local/nagios does not exist. Skipping SELinux relabeling."
+#fi
 
 # Set SELinux to enforcing mode
-if [[ "$(getenforce)" != "Enforcing" ]]; then
-    log_message "INFO" "Enabling enforcing mode for SELinux."
-    setenforce 1
-    sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
-fi
-
-# Create HTML custom error pages
-create_error_pages
-
-# Ensure auditd logging is enabled
-systemctl enable --now auditd
+#if [[ "$(getenforce)" != "Enforcing" ]]; then
+#    log_message "INFO" "Enabling enforcing mode for SELinux."
+#    setenforce 1
+#    sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+#fi
 
 # Set root and user passwords
 log_message "INFO" "Setting user passwords."
@@ -401,8 +375,5 @@ chsh -s /usr/sbin/nologin root
 log_message "INFO" "Configuring Nagios admin password."
  /usr/local/nagiosxi/scripts/reset_nagiosadmin_password.php --password="$NAGIOSADMIN_PASSWORD"
  echo " ${NAGIOSADMIN_PASSWORD}"  # Password output for password manager
-
-log_message "INFO" "Ensuring run level is multi-user."
-systemctl set-default multi-user.target
 
 log_message "INFO" "====== NagiosXI Host Configuration Complete ======"
