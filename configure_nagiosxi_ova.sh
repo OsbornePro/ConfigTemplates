@@ -178,13 +178,14 @@ dnf -y update || { log_message "ERROR" "System update failed."; exit 1; }
 
 # Install required packages
 log_message "INFO" "Installing required packages."
-dnf install -y vim mlocate epel-release mod_security mod_ssl policycoreutils-python-utils aide scap-security-guide tuned audit || {
+dnf install -y vim mlocate epel-release mod_security mod_ssl policycoreutils-python-utils aide scap-workbench scap-security-guide tuned audit || {
     log_message "ERROR" "Failed to install required packages."
     exit 1
 }
 
 # Configure /etc/skel for new users
-cd /etc/skel || exit 1
+curl -k https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/refs/heads/main/.vimrc -o /etc/skel/.vimrc || wget https://raw.githubusercontent.com/OsbornePro/ConfigTemplates/refs/heads/main/.vimrc -o /etc/skel/.vimrc
+cd /etc/skel
 umask 077
 chmod 700 /etc/skel
 find /etc/skel -type f -exec chmod 600 {} \;
@@ -197,7 +198,7 @@ fi
 log_message "INFO" "Configured /etc/skel permissions and global umask"
 
 # Set permissions for each user's home directory
-cd /home || exit 1
+cd /home
 for user in *; do
     if [ -d "$user" ]; then
         chmod 700 "$user"
@@ -232,11 +233,12 @@ systemctl enable --now tuned
 tuned-adm profile $(tuned-adm recommend)
 
 # Perform regular security audits
+log_message "INFO" "Running OpenSCAP scan"
 mkdir -p $OSCAP_DIR
 cd $OSCAP_DIR
 umask 066
 cd -
-oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_stig --results ${OSCAP_DIR}/scan.xml /usr/share/xml/scap/ssg/content/ssg-centos9-ds.xml
+oscap xccdf eval --profile xccdf_org.ssgproject.content_profile_stig --results ${OSCAP_DIR}/scan.xml /usr/share/xml/scap/ssg/content/ssg-c*-ds.xml
 
 # Setup Intrusition Protection and Monitoring
 log_message "INFO" "Initializing 'Aide' Intrusion detection and monitoring."
