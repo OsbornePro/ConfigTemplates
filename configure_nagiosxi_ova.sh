@@ -96,7 +96,7 @@ read -p "[?] Enter the Organization name (e.g., Contoso Inc.): " ORG_NAME
 
 # Global variables
 OSCAP_DIR="/root/oscap-scans"
-SSL_DIR="/var/www/html/ssl"
+SSL_DIR="/etc/httpd/ssl"
 CERT_FILE="${SSL_DIR}/server.crt"
 KEY_FILE="${SSL_DIR}/server.key"
 ROOT_PASSWORD=$(generate_password)
@@ -144,6 +144,32 @@ else
     chmod 644 "${CERT_FILE}"
     chown apache:apache "${KEY_FILE}" "${CERT_FILE}"
 fi
+
+# Ensure the journal directory exists
+JOURNAL_DIR="/var/log/journal"
+if [ ! -d "$JOURNAL_DIR" ]; then
+    log_message "INFO" "Creating persistent journal directory: $JOURNAL_DIR"
+    mkdir -p "$JOURNAL_DIR"
+    chmod 2755 "$JOURNAL_DIR"
+    log_message "INFO" "Directory created successfully."
+else
+    log_message "INFO" "Persistent journal directory already exists."
+fi
+
+# Update the systemd journald configuration and restart the service
+CONFIG_FILE="/etc/systemd/journald.conf"
+if grep -q "^#Storage=" "$CONFIG_FILE"; then
+    log_message "INFO" "Updating Storage option in $CONFIG_FILE"
+    sed -i 's/^#Storage=.*/Storage=persistent/' "$CONFIG_FILE"
+elif grep -q "^Storage=" "$CONFIG_FILE"; then
+    log_message "INFO" "Ensuring Storage option is set to persistent in $CONFIG_FILE"
+    sed -i 's/^Storage=.*/Storage=persistent/' "$CONFIG_FILE"
+else
+    log_message "INFO" "Appending Storage option to $CONFIG_FILE"
+    echo "Storage=persistent" >> "$CONFIG_FILE"
+fi
+log_message "INFO" "Restarting systemd-journald service"
+systemctl restart systemd-journald
 
 # Update the system
 log_message "INFO" "Updating the OS to the latest versions."
