@@ -83,12 +83,12 @@ create_error_pages() {
         local file_path="$output_dir/$code.html"
         # echo "ErrorDocument $code /errors/$code.html" >> /etc/httpd/conf/httpd.conf
         if ! printf '<h1>Error %s</h1>\n' "$code" > "$file_path"; then
-            printf '[x] Failed to create error page for code: %s\n' "$code" >&2
+            log_message "ERROR" "Failed to create error page for code: $code"
             return 1
         fi
     done
     chown -R nagios:nagios ${output_dir}/
-    printf '[*] Error pages created in %s\n' "$output_dir"
+    log_message "INFO" "Error pages created in $output_dir"
 }
 
 # Ensure script is run as root
