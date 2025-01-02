@@ -123,7 +123,7 @@ read -p "[?] Enter the Organization name (e.g., Contoso Inc.): " ORG_NAME
 [[ -z "$ORG_NAME" ]] && { log_message "ERROR" "ORG_NAME name cannot be empty."; exit 1; }
 
 # Global variables
-OSCAP_DIR="/root/oscap-scans"
+OSCAP_DIR="/var/log/openscap"
 SSL_DIR="/etc/httpd/ssl"
 CERT_FILE="${SSL_DIR}/server.crt"
 KEY_FILE="${SSL_DIR}/server.key"
@@ -256,6 +256,7 @@ tuned-adm profile $(tuned-adm recommend)
 # Perform security audits
 log_message "INFO" "Running OpenSCAP scan in background. Saving results to $OSCAP_DIR"
 mkdir -p $OSCAP_DIR
+chmod 700 $OSCAP_DIR
 cd $OSCAP_DIR
 umask 066
 cd -
