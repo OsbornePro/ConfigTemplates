@@ -24,6 +24,8 @@ ListenAddress 0.0.0.0
 #UsePrivilegeSeparation yes
 
 # Ciphers and keying
+# If no host keys exist which you can check with the command 'ls -l /etc/ssh/ssh_host_*'
+#   you can genereate them with the command 'ssh-keygen -A'
 HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 HostKey /etc/ssh/ssh_host_ed25519_key
@@ -47,12 +49,14 @@ MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@op
 # Logging
 SyslogFacility USER # Debian
 #SyslogFacility AUTHPRIV # RHEL, CentOS
-LogLevel INFO
+LogLevel VERBOSE
+# Verbose logging is recommended by SCAP scans
 
 
 # Authentication:
-LoginGraceTime 20
+LoginGraceTime 2m
 # How long in seconds after a connection request the server waits before disconnecting if a user has not successfully logged in
+# I added m for minutes
 
 PermitRootLogin no
 # This settings allows or prevents the root user from using SSH to sign into a machine via password or public key. Sudo users can still elevate privilege
@@ -115,6 +119,9 @@ IgnoreRhosts yes
 PasswordAuthentication no
 PermitEmptyPasswords no
 
+# Change to no to disable s/key passwords. Leave as yes so you are prompted for ssh key passwords
+KbdInteractiveAuthentication yes
+
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
 ChallengeResponseAuthentication no # Debian
@@ -122,12 +129,17 @@ ChallengeResponseAuthentication no # Debian
 
 # Kerberos options
 KerberosAuthentication no
+# The below kerberos settings I would use for a domain joined linux machine commenting out the above line
+KerberosAuthentication yes
 #KerberosOrLocalPasswd yes
 #KerberosTicketCleanup yes
-#KerberosGetAFSToken no
+# Below setting does not apply to Linux
+#KerberosGetAFSToken no 
 
 # GSSAPI options
 GSSAPIAuthentication no
+# The below GSSAPI settings I would use for a domain joined linux machine commenting out the above line
+#GSSAPIAuthentication yes
 #GSSAPICleanupCredentials yes
 #GSSAPIStrictAcceptorCheck yes
 #GSSAPIKeyExchange no
@@ -164,13 +176,15 @@ UseLogin no
 X11Forwarding yes
 
 # Enable this if I plan on using X11 to open applications on a remote device through SSH
+# If you set X11 forwarding to no you can leave these commented out
 X11DisplayOffset 10
 X11UseLocalhost yes
 
 PermitTTY yes
 
-PrintMotd yes
-# Great for printing a welcome message after authenticating to the server
+PrintMotd no
+# The new way to do this is set 'PrintMotd no' and modify /etc/pam.d/ssh adding 'motd=/etc/motd' to this line:
+#    session    optional     pam_motd.so motd=/etc/motd
 
 PrintLastLog yes
 # Considered more secure while the answer is yes so the person signing in can verify the last time they logged in
@@ -190,7 +204,7 @@ Compression delayed
 # Specifies whether compression is allowed, or delayed until the user has authenticated successfully. The argument must be ''yes'', ''delayed'', or ''no''. The default is ''delayed''.
 # This can be helpful to enable if your connection is slow
 
-ClientAliveInterval 15
+ClientAliveInterval 60
 # Sets a timeout interval in seconds after which if no data has been received from the client, sshd will send a message through the encrypted channel to request a response from the client. 
 # The default is 0, indicating that these messages will not be sent to the client. This option applies to protocol version 2 only. 
 
@@ -220,13 +234,18 @@ VersionAddendum none
 
 # no default banner path
 Banner /etc/issue 
+# Remove the kernel version from /etc/issue and /etc/issue.net and replace it with a warning like:
+#   Unauthorized access to this device is prohibitted. All connections are monitored and sessions recorded. 
+#   If you do not have permission to access this device disconnect now or risk a report to law enforcement.
 
-# Prevent ssh from advertising its version
+# Prevent ssh from advertising its version on Debian only machines
 DebianBanner no
-ShowPatchLevel no
 
-# Allow client to pass locale environment variables
-AcceptEnv LANG LC_*
+# I think the below option is retired but here just in case you need it
+#ShowPatchLevel no 
+
+# Allow client to pass locale environment variables. Better not to allow but not too critical
+#AcceptEnv LANG LC_*
 
 #Match User tom
 #	PasswordAuthentication yes
