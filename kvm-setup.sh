@@ -108,7 +108,7 @@ sudo chmod 666 /var/lib/libvirt/iso_storage/*
 
 # Command to create an image though GUI may be recommended
 cd /var/lib/libvirt
-# Make Alma VM
+# Make Alma VM from an ISO
 virt-install \
   --name AlmaLinux10 \
   --ram 2048 \
@@ -120,7 +120,7 @@ virt-install \
   --console pty,target_type=serial \
   --location /var/lib/libvirt/iso_storage/AlmaLinux-10.0-x86_64-dvd.iso
 
-# Make Ubuntu VM
+# Make Ubuntu VM from a live ISO
 virt-install \
   --name Ubuntu24 \
   --ram 3072 \
