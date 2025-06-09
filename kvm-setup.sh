@@ -1,4 +1,30 @@
 # This contains a collection of commands to use for setting up KVM for building Virtual Machine on a Linux device
+#
+# BELOW INFO WAS COMPLETED USING THE BELOW OS
+# uname -a
+#Linux toborrocky-osbornepro-com 5.14.0-570.18.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Fri May 30 18:43:28 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+#
+# cat /etc/os-release 
+#NAME="Rocky Linux"
+#VERSION="9.6 (Blue Onyx)"
+#ID="rocky"
+#ID_LIKE="rhel centos fedora"
+#VERSION_ID="9.6"
+#PLATFORM_ID="platform:el9"
+#PRETTY_NAME="Rocky Linux 9.6 (Blue Onyx)"
+#ANSI_COLOR="0;32"
+#LOGO="fedora-logo-icon"
+#CPE_NAME="cpe:/o:rocky:rocky:9::baseos"
+#HOME_URL="https://rockylinux.org/"
+#VENDOR_NAME="RESF"
+#VENDOR_URL="https://resf.org/"
+#BUG_REPORT_URL="https://bugs.rockylinux.org/"
+#SUPPORT_END="2032-05-31"
+#ROCKY_SUPPORT_PRODUCT="Rocky-Linux-9"
+#ROCKY_SUPPORT_PRODUCT_VERSION="9.6"
+#REDHAT_SUPPORT_PRODUCT="Rocky Linux"
+#REDHAT_SUPPORT_PRODUCT_VERSION="9.6"
+
 # Install required packages
 sudo dnf install -y epel-release
 sudo dnf install -y qemu-kvm libvirt virt-manager virt-install bridge-utils virt-top libguestfs-tools bridge-utils virt-viewer 
