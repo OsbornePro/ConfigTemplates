@@ -131,3 +131,35 @@ virt-install \
   --graphics vnc,listen=0.0.0.0 \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/ubuntu-24.04.2-live-server-amd64.iso
+
+# Make Windows Server 2022 from ISO
+cd /var/lib/libvirt/iso_storage
+wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+cd ..
+virt-install \
+  --name WinServer2022 \
+  --ram 4096 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/winserver2022.img,size=50,format=qcow2 \
+  --os-variant win2k22 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/WindowsServer2022_x64FRE_en-us.iso \
+  --disk path=/var/lib/libvirt/iso_storage/virtio-win.iso,device=cdrom
+
+# Make Windows Server 2025 from ISO
+cd /var/lib/libvirt/iso_storage
+wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+cd ..
+virt-install \
+  --name WinServer2025 \
+  --ram 4096 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/winserver2025.img,size=50,format=qcow2 \
+  --os-variant win2k22 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/WindowsServer2025_x64FRE_en-us.iso \
+  --disk path=/var/lib/libvirt/iso_storage/virtio-win.iso,device=cdrom
