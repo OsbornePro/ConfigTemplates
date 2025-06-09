@@ -108,6 +108,7 @@ sudo chmod 666 /var/lib/libvirt/iso_storage/*
 
 # Command to create an image though GUI may be recommended
 cd /var/lib/libvirt
+# Make Alma VM
 virt-install \
   --name AlmaLinux10 \
   --ram 2048 \
@@ -117,4 +118,16 @@ virt-install \
   --network bridge=br0,model=virtio \
   --graphics vnc,listen=0.0.0.0 \
   --console pty,target_type=serial \
-  --location /var/lib/libvirt/iso_storage/AlmaLinux-10.0-x86_64-dvd.iso \
+  --location /var/lib/libvirt/iso_storage/AlmaLinux-10.0-x86_64-dvd.iso
+
+# Make Ubuntu VM
+virt-install \
+  --name Ubuntu24 \
+  --ram 3072 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/ubuntu-24.04.02.img,size=40,format=qcow2 \
+  --os-variant ubuntu24.04 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/ubuntu-24.04.2-live-server-amd64.iso
