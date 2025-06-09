@@ -104,6 +104,7 @@ rm -rf /var/lib/libvirt/images # Delete the current folder so you can create you
 ln -s /mnt/vm_hosts /var/lib/libvirt/images # Where vm hosts get created
 # If you have an external drive you save ISOs on I also did the below for accessibility
 ln -s /mnt/iso_storage /var/lib/libvirt/iso_storage
+sudo chmod 666 /var/lib/libvirt/iso_storage/*
 
 # Command to create an image though GUI may be recommended
 cd /var/lib/libvirt
@@ -117,4 +118,3 @@ virt-install \
   --graphics vnc,listen=0.0.0.0 \
   --console pty,target_type=serial \
   --location /var/lib/libvirt/iso_storage/AlmaLinux-10.0-x86_64-dvd.iso \
-  --extra-args "console=ttyS0,serial"
