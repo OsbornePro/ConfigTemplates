@@ -114,6 +114,9 @@ ping -I br0 1.1.1.1
 #PING 1.1.1.1 (1.1.1.1) from 10.0.0.244 br0: 56(84) bytes of data.
 #64 bytes from 1.1.1.1: icmp_seq=1 ttl=55 time=13.0 ms
 #64 bytes from 1.1.1.1: icmp_seq=2 ttl=55 time=12.2 ms
+# NOTE: If this ping fails delete the br0 internface and your starting interface. Then start these commands over
+# nmcli con del br0 && nmcli con del ${BR_INT}
+# Then in the desktop interface go up to the network icon and click Connect. This will get you connected to the internet again. Once that happens start this process over
 
 # Configure the bridge interface
 echo 'allow all' > /etc/qemu-kvm/bridge.conf
@@ -157,6 +160,17 @@ virt-install \
   --graphics vnc,listen=0.0.0.0 \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/ubuntu-24.04.2-live-server-amd64.iso
+
+#===================
+# WINDOWS DEVICES
+#===================
+# IMPORTANT: Your Windows server will not have a NIC when you first boot it
+# To get internet to your Windows Server image you will need to
+# 1.) Open Device Manager
+# 2.) Right click on the drivers with a Warning icon over them that are unknown and select Update Drviers
+# 3.) Select Search my Computer for Updates
+# 4.) Select the moutned virtio drive (usually E drive)
+# 5,) Now they have internet
 
 # Make Windows Server 2022 from ISO
 cd /var/lib/libvirt/iso_storage
