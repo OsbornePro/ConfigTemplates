@@ -167,7 +167,7 @@ virt-install \
 # IMPORTANT: Your Windows server will not have a NIC when you first boot it
 # To get internet to your Windows Server image you will need to
 # 1.) Open Device Manager
-# 2.) Right click on the drivers with a Warning icon over them that are unknown and select Update Drviers
+# 2.) Right click on the drivers with a Warning icon over them that are unknown and select Update Drivers
 # 3.) Select Search my Computer for Updates
 # 4.) Select the moutned virtio drive (usually E drive)
 # 5,) Now they have internet
