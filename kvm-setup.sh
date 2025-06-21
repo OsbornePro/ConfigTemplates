@@ -149,6 +149,42 @@ virt-install \
   --console pty,target_type=serial \
   --location /var/lib/libvirt/iso_storage/AlmaLinux-10.0-x86_64-dvd.iso
 
+# Make Rocky Linux VM from an ISO
+virt-install \
+  --name RockyLinux \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/rocky.img,size=40,format=qcow2 \
+  --os-variant rocky9.0 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/Rocky-9.3-x86_64-dvd.iso
+
+# Make RHEL VM from an ISO
+virt-install \
+  --name RHEL9 \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/rhel9.img,size=40,format=qcow2 \
+  --os-variant rhel9.0 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/rhel-9.3-x86_64-dvd.iso
+
+# Make Fedora VM from a live ISO
+virt-install \
+  --name Fedora40 \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/fedora40.img,size=40,format=qcow2 \
+  --os-variant fedora40 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/Fedora-Workstation-Live-x86_64-40-1.14.iso
+
 # Make Ubuntu VM from a live ISO
 virt-install \
   --name Ubuntu24 \
@@ -161,6 +197,78 @@ virt-install \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/ubuntu-24.04.2-live-server-amd64.iso
 
+# Make a CentOS VM from a live ISO
+virt-install \
+  --name CentOSStream9 \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/centos-stream9.img,size=40,format=qcow2 \
+  --os-variant centos-stream9 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/CentOS-Stream-9-latest-x86_64-dvd1.iso
+
+# Make a Zorin VM from an ISO
+virt-install \
+  --name ZorinOS \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/zorin.img,size=40,format=qcow2 \
+  --os-variant ubuntu20.04 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/Zorin-OS-16.3-Core-64-bit.iso
+
+# Make Linux Mint VM from a live ISO
+virt-install \
+  --name LinuxMint \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/linuxmint.img,size=40,format=qcow2 \
+  --os-variant ubuntu22.04 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/linuxmint-21.3-cinnamon-64bit.iso
+
+# Make a Pop VM from an ISO
+virt-install \
+  --name PopOS \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/popos.img,size=40,format=qcow2 \
+  --os-variant ubuntu22.04 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/pop-os_22.04_amd64.iso
+
+# Make a Debian VM from an ISO
+virt-install \
+  --name Debian12 \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/debian12.img,size=40,format=qcow2 \
+  --os-variant debian12 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/debian-12.5.0-amd64-netinst.iso
+
+# Make an MX Linux VM from an ISO
+virt-install \
+  --name MXLinux \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/mxlinux.img,size=40,format=qcow2 \
+  --os-variant debian12 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/MX-23.2_x64.iso
+
 # Make Kali VM from a live ISO
 virt-install \
   --name Kali \
@@ -172,6 +280,18 @@ virt-install \
   --graphics vnc,listen=0.0.0.0 \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/kali-linux-2025.2-installer-amd64.iso
+
+# Make OpenSUSE VM from a live ISO
+virt-install \
+  --name OpenSUSE \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/opensuse.img,size=40,format=qcow2 \
+  --os-variant opensuse15.5 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/openSUSE-Leap-15.5-DVD-x86_64.iso
 
 # Make ArchLinux VM from a live ISO
 virt-install \
@@ -186,6 +306,29 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/archlinux-2025.06.01-x86_64.iso \
   --boot cdrom,useserial=on
 
+# Make a Manjaro VM from a live ISO
+virt-install \
+  --name Manjaro \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/manjaro.img,size=40,format=qcow2 \
+  --os-variant archlinux \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/manjaro-kde-24.0.1-minimal.iso
+
+# Make a NixOS from a VM image
+virt-install \
+  --name NixOS \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/nixos.img,size=40,format=qcow2 \
+  --os-variant nixos-21.05 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/nixos-24.05.1234-x86_64-linux.iso
 
 #===================
 # WINDOWS DEVICES
