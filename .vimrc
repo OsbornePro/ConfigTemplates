@@ -8,7 +8,7 @@
 "                 ╚═══╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝
 "               
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""               
-colorscheme retrobox
+colorscheme elflord
 " Disable compatibility with vi which can cause unexpected issues.
 set nocompatible
 
