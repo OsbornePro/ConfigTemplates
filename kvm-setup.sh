@@ -161,6 +161,32 @@ virt-install \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/ubuntu-24.04.2-live-server-amd64.iso
 
+# Make Kali VM from a live ISO
+virt-install \
+  --name Kali \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/kali-linux-2025.2.img,size=40,format=qcow2 \
+  --os-variant debian12 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/kali-linux-2025.2-installer-amd64.iso
+
+# Make ArchLinux VM from a live ISO
+virt-install \
+  --name ArchLinux \
+  --ram 2048 \
+  --vcpus 2 \
+  --disk path=/var/lib/libvirt/images/archlinux-2025.06.01.img,size=40,format=qcow2 \
+  --os-variant archlinux \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --console pty,target_type=serial \
+  --cdrom /var/lib/libvirt/iso_storage/archlinux-2025.06.01-x86_64.iso \
+  --boot cdrom,useserial=on
+
+
 #===================
 # WINDOWS DEVICES
 #===================
