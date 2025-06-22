@@ -280,6 +280,9 @@ virt-install \
   --graphics vnc,listen=0.0.0.0 \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/kali-linux-2025.2-installer-amd64.iso
+# NOTE: On Kali you may need to install the below packages in order to make the resize work
+sudo apt update
+sudo apt install -y spice-vdagent qemu-guest-agent
 
 # Make OpenSUSE VM from a live ISO
 virt-install \
