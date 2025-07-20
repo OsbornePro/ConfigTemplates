@@ -26,7 +26,7 @@
 #REDHAT_SUPPORT_PRODUCT_VERSION="10.0"
 #SUPPORT_END=2035-06-01
 
-# Run as root                                                                                                                                                                       [205/3354]
+# Run as root
 if [[ "$EUID" -ne 0 ]]; then                                                                                                                                                                  
     echo "[ERROR] This script must be run as root. Exiting."                                                                                                                                  
     exit 1                                                                                                                                                                                    
@@ -77,7 +77,7 @@ fi
                                                                                                                                                                                               
 # Now configure SSH keys only if not already set up                                                                                                                                           
 sudo -u "$USERNAME" bash <<'EOSU'
-mkdir -p ~/.ssh                                                                                                                                                                     [154/3354]
+mkdir -p ~/.ssh
 chmod 700 ~/.ssh                                                                                                                                                                              
                                                                                                                                                                                               
 if [ ! -f ~/.ssh/ansible_key ]; then                                                                                                                                                          
@@ -128,7 +128,7 @@ curl -sfL https://get.k3s.io | sudo sh -
 echo "[INFO] Installing kustomize"                                                                                                                                                            
 KUSTOMIZE_INSTALL_DIR="/usr/local/bin"                                                                                                                                                        
 TMP_DIR=$(mktemp -d)
-curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash -s -- "$TMP_DIR"                                                        [103/3354]
+curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash -s -- "$TMP_DIR"
 mv "$TMP_DIR"/kustomize "$KUSTOMIZE_INSTALL_DIR"                                                                                                                                              
 chown root:root "$KUSTOMIZE_INSTALL_DIR/kustomize"                                                                                                                                            
 chmod 755 "$KUSTOMIZE_INSTALL_DIR/kustomize"                                                                                                                                                  
@@ -179,7 +179,7 @@ images:
                                                                                                                                                                                               
 namespace: awx                                                                                                                                                                                
 EOF
-# Create the namespace if it doesn't exist                                                                                                                                           [51/3354]
+# Create the namespace if it doesn't exist
 sudo -u ansible-user kubectl create namespace awx --dry-run=client -o yaml | kubectl apply -f -                                                                                               
                                                                                                                                                                                               
 # Build and apply the configuration using kustomize                                                                                                                                           
