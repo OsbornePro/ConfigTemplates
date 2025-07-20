@@ -39,7 +39,8 @@ set -o pipefail  # Catch errors in piped commands
 setenforce 0
 
 # DISABLE FIREWALL SO CONTAINERS CAN TALK ON SETUP
-systemctl stop firewalld
+firewall-cmd --add-port=30080/tcp --permanent
+firewall-cmd --reload
 
 # CREATE THE USER ACCOUNT TO USE 
 USERNAME="ansible-user"
@@ -273,14 +274,20 @@ if [ -z "$POD_NAME" ]; then
     echo "[ERROR] AWX operator pod not found in namespace $NAMESPACE"
     exit 1
 fi
-sudo -u ansible-user /usr/local/bin/kubectl logs -n $NAMESPACE -f $POD_NAME -c $CONTAINER | while IFS= read -r line; do
+
+echo "[INFO] Waiting for pod $POD_NAME to be Ready..."
+sudo -u ansible-user /usr/local/bin/kubectl wait --namespace="$NAMESPACE" --for=condition=Ready pod/"$POD_NAME" --timeout=120s
+
+echo "[INFO] Monitoring logs for AWX lifecycle trigger ('$PATTERN')..."
+sudo -u ansible-user /usr/local/bin/kubectl logs -n "$NAMESPACE" -f "$POD_NAME" -c "$CONTAINER" | while IFS= read -r line; do
     echo "$line"
     if echo "$line" | grep -q "$PATTERN"; then
         echo "Detected '$PATTERN' in logs, continuing..."
-        pkill -P $$ /usr/local/bin/kubectl # kill the kubectl logs tail
+        pkill -P $$ /usr/local/bin/kubectl
         break
     fi
 done
+
 echo " You should see something like:"
 echo "----------------------------------------------------------------------------------------------"
 echo "#NAME                                               READY   STATUS    RESTARTS      AGE"
@@ -295,9 +302,6 @@ sudo -u ansible-user /usr/local/bin/kubectl get pods -n awx
 echo "----------------------------------------------------------------------------------------------"
 
 # GET THE TEMP PASSWORD
-echo "[INFO] AWX should now be accessible at https://$($hostname):30080"
+echo "[INFO] AWX should now be accessible at https://$(hostname):30080"
 sudo -u ansible-user /usr/local/bin/kubectl get secret awx-demo-admin-password -o jsonpath="{.data.password}" | base64 --decode
 echo "[INFO] Username is 'admin'"
-
-# START THE FIREWALL AGAIN
-systemctl start firewalld
