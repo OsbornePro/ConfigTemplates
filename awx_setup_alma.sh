@@ -242,22 +242,8 @@ spec:
   #projects_storage_size: 10Gi
 EOF
 
-echo "[INFO]  awx-demo.yaml created successfully."
-
-
-# OVERWRITE kustomization.yaml FILE TO ACCOMDATE ABOVE
-cat << 'EOF' > kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  # Find the latest tag here: https://github.com/ansible/awx-operator/releases
-  - github.com/ansible/awx-operator/config/default?ref=1.1.4
-  - awx-demo.yaml
-
-# Set the image tags to match the git version from above
-images:
-  - name: quay.io/ansible/awx-operator
-    newTag: 1.1.4
+echo "[INFO]  awx-demo.yaml created successfully. Applying it to kustomization"
+sudo -u ansible-user /usr/local/bin/kubectl apply -f awx-demo.yaml
 
 # Specify a custom namespace in which to install AWX
 namespace: awx
