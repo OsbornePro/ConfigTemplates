@@ -26,114 +26,209 @@
 #REDHAT_SUPPORT_PRODUCT_VERSION="10.0"
 #SUPPORT_END=2035-06-01
 
-# CREATE THE USER ACCOUNT TO USE 
-sudo useradd -m -d /var/lib/ansible ansible-user
-SUDO_GROUP=$(sudo grep -E '^%[a-zA-Z0-9_-]+\s+ALL=\(ALL(:ALL)?\)\s+ALL' /etc/sudoers | awk '{print $1}' | sed 's/^%//')
-SUDO_GROUP=${SUDO_GROUP:-wheel}
-sudo usermod -aG "$SUDO_GROUP" ansible-user
-echo 123Sup3rStr0ngP455w0rdY0uN33dToCh4ng3321 | sudo passwd --stdin ansible-user
-sudo tee /var/lib/ansible/.bashrc > /dev/null << 'EOF'
-export PATH=$PATH:/usr/local/bin
-export KUBECONFIG=$HOME/.kube/config
+# Run as root                                                                                                                                                                       [205/3354]
+if [[ "$EUID" -ne 0 ]]; then                                                                                                                                                                  
+    echo "[ERROR] This script must be run as root. Exiting."                                                                                                                                  
+    exit 1                                                                                                                                                                                    
+fi                                                                                                                                                                                            
+                                                                                                                                                                                              
+set -e  # Exit immediately on any error                                                                                                                                                       
+set -o pipefail  # Catch errors in piped commands                                                                                                                                             
+                                                                                                                                                                                              
+# SET SELINUX TO PERMISSIVE UNTIL SETUP COMPLETES                                                                                                                                             
+setenforce 0                                                                                                                                                                                  
+                                                                                                                                                                                              
+# DISABLE FIREWALL SO CONTAINERS CAN TALK ON SETUP                                                                                                                                            
+systemctl stop firewalld                                                                                                                                                                      
+                                                                                                                                                                                              
+# CREATE THE USER ACCOUNT TO USE                                                                                                                                                              
+USERNAME="ansible-user"                                                                                                                                                                       
+USER_HOME="/var/lib/ansible"                                                                                                                                                                  
+USER_PASSWORD="123Sup3rStr0ngP455w0rdY0uN33dToCh4ng3321"                                                                                                                                      
+                                                                                                                                                                                              
+# Check if the user already exists                                                                                                                                                            
+if id "$USERNAME" &>/dev/null; then                                                                                                                                                           
+    echo "[INFO] User '$USERNAME' already exists. Skipping creation."                                                                                                                         
+else                                                                                                                                                                                          
+    echo "[INFO] Creating user '$USERNAME'"                                                                                                                                                   
+                                                                                                                                                                                              
+    # Create the user with specified home directory                                                                                                                                           
+    useradd -m -d "$USER_HOME" "$USERNAME"                                                                                                                                                    
+                                                                                                                                                                                              
+    # Detect the main sudo group                                                                                                                                                              
+    SUDO_GROUP=$(grep -E '^%[a-zA-Z0-9_-]+\s+ALL=\(ALL(:ALL)?\)\s+ALL' /etc/sudoers | awk '{print $1}' | sed 's/^%//')                                                                        
+    SUDO_GROUP=${SUDO_GROUP:-wheel}                                                                                                                                                           
+                                                                                                                                                                                              
+    # Add user to sudo group                                                                                                                                                                  
+    usermod -aG "$SUDO_GROUP" "$USERNAME"                                                                                                                                                     
+                                                                                                                                                                                              
+    # Set password for the user                                                                                                                                                               
+    echo "$USER_PASSWORD" | sudo passwd --stdin "$USERNAME"                                                                                                                                   
+                                                                                                                                                                                              
+    # Add useful environment variables to .bashrc                                                                                                                                             
+    sudo -u $USERNAME tee "$USER_HOME/.bashrc" > /dev/null << 'EOF'                                                                                                                           
+export PATH=$PATH:/usr/local/bin                                                                                                                                                              
+export KUBECONFIG=$HOME/.kube/config                                                                                                                                                          
+EOF                                                                                                                                                                                           
+                                                                                                                                                                                              
+    chown -R "$USERNAME:$USERNAME" "$USER_HOME"                                                                                                                                               
+    echo "[INFO] User '$USERNAME' created and configured."                                                                                                                                    
+fi                                                                                                                                                                                            
+                                                                                                                                                                                              
+# Now configure SSH keys only if not already set up                                                                                                                                           
+sudo -u "$USERNAME" bash <<'EOSU'
+mkdir -p ~/.ssh                                                                                                                                                                     [154/3354]
+chmod 700 ~/.ssh                                                                                                                                                                              
+                                                                                                                                                                                              
+if [ ! -f ~/.ssh/ansible_key ]; then                                                                                                                                                          
+    ssh-keygen -t ed25519 -f ~/.ssh/ansible_key -N ""                                                                                                                                         
+fi                                                                                                                                                                                            
+                                                                                                                                                                                              
+# Ensure the public key is in authorized_keys                                                                                                                                                 
+grep -qxFf ~/.ssh/ansible_key.pub ~/.ssh/authorized_keys 2>/dev/null || cat ~/.ssh/ansible_key.pub >> ~/.ssh/authorized_keys                                                                  
+chmod 600 ~/.ssh/authorized_keys                                                                                                                                                              
+EOSU                                                                                                                                                                                          
+                                                                                                                                                                                              
+                                                                                                                                                                                              
+# INSTALL REQUIREMENTS                                                                                                                                                                        
+echo "[QUESTION] Which container engine do you want to install?"                                                                                                                              
+echo "1) Podman"                                                                                                                                                                              
+echo "2) Docker"                                                                                                                                                                              
+read -rp "Enter 1 or 2: " choice                                                                                                                                                              
+                                                                                                                                                                                              
+# Install common dependencies                                                                                                                                                                 
+dnf -y install tar git python3 python3-pip                                                                                                                                                    
+                                                                                                                                                                                              
+if [ "$choice" == "1" ]; then                                                                                                                                                                 
+    dnf -y install podman                                                                                                                                                                     
+    /bin/podman --version                                                                                                                                                                     
+    usermod --add-subuids 100000-165535 --add-subgids 100000-165535 ansible-user                                                                                                              
+    sudo -u ansible-user bash <<'EOF'                                                                                                                                                         
+mkdir -p ~/.config/containers                                                                                                                                                                 
+mkdir -p ~/.local/share/containers                                                                                                                                                            
+EOF                                                                                                                                                                                           
+                                                                                                                                                                                              
+elif [ "$choice" == "2" ]; then                                                                                                                                                               
+    dnf install -y dnf-plugins-core                                                                                                                                                           
+    dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo                                                                                                     
+    dnf install -y docker-ce docker-ce-cli containerd.io                                                                                                                                      
+    systemctl enable --now docker                                                                                                                                                             
+    /usr/bin/docker --version                                                                                                                                                                 
+                                                                                                                                                                                              
+else                                                                                                                                                                                          
+    echo "[ERROR] Invalid choice. Exiting."                                                                                                                                                   
+    exit 1                                                                                                                                                                                    
+fi                                                                                                                                                                                            
+                                                                                                                                                                                              
+# Install K3s                                                                                                                                                                                 
+echo "[INFO] Installing k3s"                                                                                                                                                                  
+curl -sfL https://get.k3s.io | sudo sh -                                                                                                                                                      
+                                                                                                                                                                                              
+# Download and install kustomize                                                                                                                                                              
+echo "[INFO] Installing kustomize"                                                                                                                                                            
+KUSTOMIZE_INSTALL_DIR="/usr/local/bin"                                                                                                                                                        
+TMP_DIR=$(mktemp -d)
+curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash -s -- "$TMP_DIR"                                                        [103/3354]
+mv "$TMP_DIR"/kustomize "$KUSTOMIZE_INSTALL_DIR"                                                                                                                                              
+chown root:root "$KUSTOMIZE_INSTALL_DIR/kustomize"                                                                                                                                            
+chmod 755 "$KUSTOMIZE_INSTALL_DIR/kustomize"                                                                                                                                                  
+rm -rf -- "$TMP_DIR"                                                                                                                                                                          
+                                                                                                                                                                                              
+                                                                                                                                                                                              
+# CREATE KUSTOMIZATION CONFIG LOCATIONS                                                                                                                                                       
+sudo -u "$USERNAME" mkdir -p "$(eval echo ~$USERNAME)/.kube"                                                                                                                                  
+cp /etc/rancher/k3s/k3s.yaml "$(eval echo ~$USERNAME)/.kube/config"                                                                                                                           
+chmod 644 /etc/rancher/k3s/k3s.yaml                                                                                                                                                           
+chmod 600 ~/.kube/config                                                                                                                                                                      
+chown $(id -u "$USERNAME"):$(id -g "$USERNAME") "$(eval echo ~$USERNAME)/.kube/config"                                                                                                        
+                                                                                                                                                                                              
+                                                                                                                                                                                              
+# Create a systemd drop-in override directory for k3s                                                                                                                                         
+mkdir -p /etc/systemd/system/k3s.service.d                                                                                                                                                    
+                                                                                                                                                                                              
+# Write the override file to set the kubeconfig permissions                                                                                                                                   
+cat <<EOF | sudo tee /etc/systemd/system/k3s.service.d/override.conf > /dev/null                                                                                                              
+[Service]                                                                                                                                                                                     
+ExecStart=                                                                                                                                                                                    
+ExecStart=/usr/local/bin/k3s server --write-kubeconfig-mode 644                                                                                                                               
+EOF                                                                                                                                                                                           
+                                                                                                                                                                                              
+# Reload systemd manager config to pick up changes                                                                                                                                            
+systemctl daemon-reexec                                                                                                                                                                       
+systemctl daemon-reload                                                                                                                                                                       
+                                                                                                                                                                                              
+# Restart k3s to apply the new ExecStart                                                                                                                                                      
+systemctl restart k3s                                                                                                                                                                         
+                                                                                                                                                                                              
+# Optional: Show the status of k3s to confirm it restarted cleanly                                                                                                                            
+systemctl status k3s --no-pager                                                                                                                                                               
+                                                                                                                                                                                              
+                                                                                                                                                                                              
+# CONFIGURE KUSTOMIZATION                                                                                                                                                                     
+# Create a kustomization.yaml file for deploying the AWX Operator                                                                                                                             
+cat << 'EOF' > kustomization.yaml                                                                                                                                                             
+apiVersion: kustomize.config.k8s.io/v1beta1                                                                                                                                                   
+kind: Kustomization                                                                                                                                                                           
+resources:                                                                                                                                                                                    
+  # Refers to a specific release tag of the AWX Operator's kustomize configs                                                                                                                  
+  - github.com/ansible/awx-operator/config/default?ref=1.1.4                                                                                                                                  
+                                                                                                                                                                                              
+images:                                                                                                                                                                                       
+  - name: quay.io/ansible/awx-operator                                                                                                                                                        
+    newTag: 1.1.4                                                                                                                                                                             
+                                                                                                                                                                                              
+namespace: awx                                                                                                                                                                                
 EOF
-sudo chown -R ansible-user:ansible-user /var/lib/ansible
-sudo -u ansible-user -i
-source ~/.bashrc
-mkdir ~/.ssh
-touch ~/.ssh/authorized_keys
-ssh-keygen -t ed25519 -f ~/.ssh/ansible_key
-grep -qxFf ~/.ssh/ansible_key.pub ~/.ssh/authorized_keys || cat ~/.ssh/ansible_key.pub >> ~/.ssh/authorized_keys
-
-
-# SET SELINUX TO PERMISSIVE UNTIL SETUP COMPLETES
-sudo setenforce 0
-getenforce
-
-
-# INSTALL REQUIREMENTS
-sudo dnf -y install tar git
-sudo -i
-cd /usr/local/bin
-curl -sfL https://get.k3s.io | sh -
-curl -s https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash
-exit
-sudo chown root:root /usr/local/bin/kustomize
-sudo chmod 755 /usr/local/bin/kustomize
-/usr/local/bin/kubectl version
-
-
-# CREATE KUSTOMIZATION CONFIG LOCATIONS
-mkdir -p ~/.kube
-cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-sudo chmod 600 ~/.kube/config
-chown $(id -u):$(id -g) ~/.kube/config
-
-
-# CONFIGURE KUSTOMIZATION
-cat << 'EOF' > kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  # Find the latest tag here: https://github.com/ansible/awx-operator/releases
-  - github.com/ansible/awx-operator/config/default?ref=1.1.4
-  
-# Set the image tags to match the git version from above
-images:
-  - name: quay.io/ansible/awx-operator
-    newTag: 1.1.4
-
-# Specify a custom namespace in which to install AWX
-namespace: awx
-EOF
-kustomize build . | kubectl apply -f -
-kustomize edit fix --vars
-
-
-# VERIFY AWX POD IS RUNNING BEFORE CONTINUING
-if kubectl get pods -n awx | grep -q "awx-operator-controller-manager.*Running"; then
-    echo "AWX Operator is running. Proceeding to create awx-demo.yaml."
-    cat << 'EOF' > awx-demo.yaml
----
-apiVersion: awx.ansible.com/v1beta1
-kind: AWX
-metadata:
-  name: awx
-spec:
-  service_type: nodeport
-  nodeport_port: 30080
-  #projects_persistence: true
-  #projects_storage_class: rook-ceph
-  #projects_storage_size: 10Gi
-EOF
-
-    echo "awx-demo.yaml created successfully."
-else
-    echo "AWX operator is not running correctly. Troubleshoot the failure of the command 'kubectl get pods -n awx'."
-    exit 1
-fi
-
-# OVERWRITE kustomization.yaml FILE TO ACCOMDATE ABOVE
-kubectl delete awx awx -n awx
-kustomize build . | kubectl delete -f -
-cat << 'EOF' > awx-demo.yaml
----
-apiVersion: awx.ansible.com/v1beta1
-kind: AWX
-metadata:
-  name: awx
-spec:
-  service_type: nodeport
-  nodeport_port: 30080
-  #projects_persistence: true
-  #projects_storage_class: rook-ceph
-  #projects_storage_size: 10Gi
-EOF
-
-cat << 'EOF' > kustomization.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  # Find the latest tag here: https://github.com/ansible/awx-operator/releases
+# Create the namespace if it doesn't exist                                                                                                                                           [51/3354]
+sudo -u ansible-user kubectl create namespace awx --dry-run=client -o yaml | kubectl apply -f -                                                                                               
+                                                                                                                                                                                              
+# Build and apply the configuration using kustomize                                                                                                                                           
+sudo -u ansible-user kustomize build . | kubectl apply -f -                                                                                                                                   
+                                                                                                                                                                                              
+                                                                                                                                                                                              
+# VERIFY AWX POD IS RUNNING BEFORE CONTINUING                                                                                                                                                 
+if sudo -u ansible-user kubectl get pods -n awx | grep -q "awx-operator-controller-manager.*Running"; then                                                                                    
+    echo "[INFO] AWX Operator is running. Proceeding to create awx-demo.yaml."                                                                                                                
+    cat << 'EOF' > awx-demo.yaml                                                                                                                                                              
+---                                                                                                                                                                                           
+apiVersion: awx.ansible.com/v1beta1                                                                                                                                                           
+kind: AWX                                                                                                                                                                                     
+metadata:                                                                                                                                                                                     
+  name: awx                                                                                                                                                                                   
+spec:                                                                                                                                                                                         
+  service_type: nodeport                                                                                                                                                                      
+  nodeport_port: 30080                                                                                                                                                                        
+  #projects_persistence: true                                                                                                                                                                 
+  #projects_storage_class: rook-ceph                                                                                                                                                          
+  #projects_storage_size: 10Gi                                                                                                                                                                
+EOF                                                                                                                                                                                           
+                                                                                                                                                                                              
+    echo "[INFO] awx-demo.yaml created successfully."                                                                                                                                         
+else                                                                                                                                                                                          
+    echo "[ERROR] AWX operator is not running correctly. Troubleshoot the failure of the command 'kubectl get pods -n awx'."                                                                  
+    exit 1                                                                                                                                                                                    
+fi                                                                                                                                                                                            
+                                                                                                                                                                                              
+# OVERWRITE kustomization.yaml FILE TO ACCOMDATE ABOVE                                                                                                                                        
+cat << 'EOF' > awx-demo.yaml                                                                                                                                                                  
+---                                                                                                                                                                                           
+apiVersion: awx.ansible.com/v1beta1                                                                                                                                                           
+kind: AWX                                                                                                                                                                                     
+metadata:                                                                                                                                                                                     
+  name: awx                                                                                                                                                                                   
+spec:                                                                                                                                                                                         
+  service_type: nodeport                                                                                                                                                                      
+  nodeport_port: 30080                                                                                                                                                                        
+  #projects_persistence: true                                                                                                                                                                 
+  #projects_storage_class: rook-ceph                                                                                                                                                          
+  #projects_storage_size: 10Gi                                                                                                                                                                
+EOF                                                                                                                                                                                           
+                                                                                                                                                                                              
+cat << 'EOF' > kustomization.yaml                                                                                                                                                             
+apiVersion: kustomize.config.k8s.io/v1beta1                                                                                                                                                   
+kind: Kustomization                                                                                                                                                                           
+resources:                                                                                                                                                                                    
+  # Find the latest tag here: https://github.com/ansible/awx-operator/releases                                                                                                                
   - github.com/ansible/awx-operator/config/default?ref=1.1.4
   - awx-demo.yaml
 
@@ -146,33 +241,26 @@ images:
 namespace: awx
 EOF
 
-kubectl config set-context --current --namespace=awx
-kustomize build . | kubectl apply -f -
-echo "Waiting for AWX operator to complete playbook"
+sudo -u ansible-user kubectl config set-context --current --namespace=awx
+sudo -u ansible-user kustomize build . | sudo -u ansible-user kubectl apply -f -
 NAMESPACE="awx"
 DEPLOYMENT="awx-operator-controller-manager"
 CONTAINER="awx-manager"
 PATTERN="PLAY RECAP"
-# Get the pod name (assuming single pod for deployment)
-# Monitor logs manually using this command
-#kubectl logs -f deployments/awx-operator-controller-manager -c awx-manager
 POD_NAME=$(kubectl get pods -n $NAMESPACE -l app.kubernetes.io/name=awx-operator-controller-manager -o jsonpath='{.items[0].metadata.name}')
 if [ -z "$POD_NAME" ]; then
-  echo "ERROR: AWX operator pod not found in namespace $NAMESPACE"
-  exit 1
+    echo "[ERROR] AWX operator pod not found in namespace $NAMESPACE"
+    exit 1
 fi
-# Tail logs until the pattern is found, then exit
-kubectl logs -n $NAMESPACE -f $POD_NAME -c $CONTAINER | while IFS= read -r line; do
-  echo "$line"
-  if echo "$line" | grep -q "$PATTERN"; then
-    echo "Detected '$PATTERN' in logs, continuing..."
-    pkill -P $$ kubectl # kill the kubectl logs tail
-    break
-  fi
+sudo -u ansible-user kubectl logs -n $NAMESPACE -f $POD_NAME -c $CONTAINER | while IFS= read -r line; do
+    echo "$line"
+    if echo "$line" | grep -q "$PATTERN"; then
+        echo "Detected '$PATTERN' in logs, continuing..."
+        pkill -P $$ kubectl # kill the kubectl logs tail
+        break
+    fi
 done
-echo "Completed succesfully! Verify below output"
-echo "
-# You should see something like:"
+echo " You should see something like:"
 echo "----------------------------------------------------------------------------------------------"
 echo "#NAME                                               READY   STATUS    RESTARTS      AGE"
 echo "#awx-postgres-13-0                                  1/1     Running   2 (43h ago)   4d4h"
@@ -182,10 +270,13 @@ echo "--------------------------------------------------------------------------
 
 echo "Your results are below"
 echo "----------------------------------------------------------------------------------------------"
-kubectl get pods -n awx
+sudo -u ansible-user kubectl get pods -n awx
 echo "----------------------------------------------------------------------------------------------"
 
 # GET THE TEMP PASSWORD
-echo "AWX should now be accessible at https://$($hostname):30080"
+echo "[INFO] AWX should now be accessible at https://$($hostname):30080"
 kubectl get secret awx-demo-admin-password -o jsonpath=”{.data.password}” | base64 --decode
-echo "Username is 'admin'"
+echo "[INFO] Username is 'admin'"
+
+# START THE FIREWALL AGAIN
+systemctl start firewalld
