@@ -262,9 +262,10 @@ sudo -u ansible-user /usr/local/bin/kustomize build "${AWX_DIR}" | sudo -u ansib
 
 
 # VERIFY AWX POD IS RUNNING BEFORE CONTINUING
+sleep 5
 echo "[INFO]  Check if any awx-operator pod exists before entering loop"
 if ! sudo -u ansible-user env KUBECONFIG="$KUBECONFIG_PATH" /usr/local/bin/kubectl get pods -n awx | grep -q "awx-operator-controller-manager"; then
-    echo "[ERROR]  No awx-operator pod found. Was the deployment successful?" >&2
+    echo "[ERROR]  No awx-operator pod found." >&2
     exit 1
 fi
 
