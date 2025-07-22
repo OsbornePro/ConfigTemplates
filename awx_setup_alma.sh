@@ -50,7 +50,7 @@ USER_PASSWORD="123Sup3rStr0ngP455w0rdY0uN33dToCh4ng3321"
 NAMESPACE="awx"
 DEPLOYMENT="awx-operator-controller-manager"
 CONTAINER="awx-manager"
-PATTERN="PLAY RECAP"
+PATTERN="ok =69"
 AWX_DIR="/opt/awx-operator"
 KUSTOMIZE_INSTALL_DIR="/usr/local/bin"
 KUBECONFIG_PATH="$(eval echo ~$USERNAME)/.kube/config"
@@ -115,11 +115,11 @@ EOSU
 
 
 # INSTALL REQUIREMENTS
-echo "[ANSR]  Which container engine do you want to install?"
-printf "\t\t1) Podman\n"
-printf "\t\t2) Docker\n"
-read -rp "Enter 1 or 2: " choice
-
+#echo "[ANSR]  Which container engine do you want to install?"
+#printf "\t\t1) Podman\n"
+#printf "\t\t2) Docker\n"
+#read -rp "Enter 1 or 2: " choice
+choice=1
 # Install common dependencies
 PACKAGES=(tar git python3 python3-pip)
 for pkg in "${PACKAGES[@]}"; do
@@ -286,23 +286,48 @@ while true; do
     sleep 2
 done
 echo "[INFO]  AWX Operator is running. Creating file awx-demo.yaml."
+sudo -u ansible-user env KUBECONFIG="$KUBECONFIG_PATH" /usr/local/bin/kubectl create namespace awx 2&>/dev/null || echo "[INFO]  Namespace awx exists"
+sudo -u ansible-user env KUBECONFIG="$KUBECONFIG_PATH" /usr/local/bin/kubectl create secret generic awx-admin-password --namespace awx --from-literal=password='SuperStrongPassword123!' 2&>/dev/null || echo "[INFO]  Secret already created"
+
 cat <<EOF > ${AWX_DIR}/awx-demo.yaml
 ---
 apiVersion: awx.ansible.com/v1beta1
 kind: AWX
 metadata:
   name: awx
+  namespace: awx
 spec:
   service_type: nodeport
   nodeport_port: 30080
-  #projects_persistence: true
-  #projects_storage_class: rook-ceph
-  #projects_storage_size: 10Gi
+  ingress_type: none
+  admin_user: admin
+  no_log: false
 EOF
 
 echo "[INFO]  awx-demo.yaml created successfully. Applying it to kustomization"
 APPLY_YAML_RESULT=$(sudo -u ansible-user env KUBECONFIG="$KUBECONFIG_PATH" /usr/local/bin/kubectl apply -f ${AWX_DIR}/awx-demo.yaml)
 echo "[INFO]  Update kustomization with awx result: ${APPLY_YAML_RESULT}"
+
+
+echo "[INFO]  Apply the required awx-operator permissions."
+cat <<EOF > ${AWX_DIR}/awx-operator-permissions.yaml
+---
+# awx-operator-permissions.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: awx-operator-permissions
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: awx-operator
+subjects:
+  - kind: ServiceAccount
+    name: awx-operator-controller-manager
+    namespace: awx
+EOF
+chown $(id -u "$USERNAME"):$(id -g "$USERNAME") ${AWX_DIR}/awx-operator-permissions.yaml
+sudo -u ansible-user KUBECONFIG="$(eval echo ~$USERNAME)/.kube/config" /usr/local/bin/kubectl apply -f ${AWX_DIR}/awx-operator-permissions.yaml &>/dev/null
 
 echo "[INFO]  Set the default namespace for the current kubernetes context to awx"
 chown root:root /etc/rancher/k3s/k3s.yaml
@@ -333,7 +358,7 @@ fi
 echo "[INFO]  Waiting for pod $POD_NAME to be Ready"
 sudo -u ansible-user env KUBECONFIG="$KUBECONFIG_PATH" /usr/local/bin/kubectl wait --namespace="$NAMESPACE" --for=condition=Ready pod/"$POD_NAME" --timeout=120s &>/dev/null
 
-echo "[INFO]  Monitoring logs for AWX lifecycle trigger ('$PATTERN')..."
+echo "[INFO]  Monitoring logs for AWX lifecycle trigger '$PATTERN'"
 sudo -u ansible-user env KUBECONFIG="$KUBECONFIG_PATH" /usr/local/bin/kubectl logs -n "$NAMESPACE" -f "$POD_NAME" -c "$CONTAINER" | while IFS= read -r line; do
     if echo "$line" | grep -q "$PATTERN"; then
         echo "Detected '$PATTERN' in logs, continuing"
