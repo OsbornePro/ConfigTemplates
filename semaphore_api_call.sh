@@ -2,6 +2,8 @@
 ###################################################################################################
 #  DESCRIPTION:                                                                                   #
 #  This script was designed to be executed by a NagiosXI Event Handler to run Semaphore Tasks     #
+#  The tough thing about Nagios event handlers is using the correct host name value so it         #
+#   matches the inventory value. Modify line 84 in this script to make that work for you          #
 #                                                                                                 #
 #   Company: OsbornePro LLC.                                                                      #
 #   Website: https://osbornepro.com                                                               #
