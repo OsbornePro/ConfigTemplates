@@ -173,7 +173,7 @@ EOF
 chmod 600 /etc/postfix/mime_header_checks
 chown root:root /etc/postfix/mime_header_checks
 
-# === main.cf (LMDB + texthash + NO btree AT ALL) ===
+# === main.cf (Override btree defaults) ===
 cat > /etc/postfix/main.cf <<EOF
 # === Auto-generated – AlmaLinux 10+ (LMDB + texthash + no btree) ===
 compatibility_level = 3.8
@@ -199,9 +199,10 @@ header_size_limit = 4096000
 # SMTPUTF8 – Disable to avoid relay rejection
 smtputf8_enable = no
 
-# TLS Client
+# TLS Client – OVERRIDE DEFAULT btree
 smtp_tls_security_level = $TLS_LEVEL
 smtp_tls_loglevel = 1
+smtp_tls_session_cache_database = 
 EOF
 
 # === Trusted CA (only for encrypt) ===
@@ -237,12 +238,13 @@ fi
 # === Server TLS + Maps (LMDB) ===
 cat >> /etc/postfix/main.cf <<EOF
 
-# Server TLS
+# Server TLS – OVERRIDE DEFAULT btree
 smtpd_tls_security_level = may
 smtpd_tls_cert_file = $CERTFILE
 smtpd_tls_key_file = $KEYFILE
 smtpd_tls_loglevel = 1
 smtpd_tls_received_header = yes
+smtpd_tls_session_cache_database = 
 
 # Security
 disable_vrfy_command = yes
