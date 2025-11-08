@@ -10,7 +10,8 @@
 #   Author: Robert H. Osborne                                                                     #
 #   Contact: rosborne@osbornepro.com                                                              #
 ###################################################################################################
-SEMAPHORE_SERVER_FQDN="semaphore.domain.com"
+# Define the user ID of the local AAP user you are authenticating to AAP with
+USER_ID=8
 USAGE="
 #===============================================#
 #   ___     _                      ___          #
@@ -127,8 +128,6 @@ else
         exit 1
     fi
 
-    # AAP user is nagios_caller
-    USER_ID=8
     log_message "[-] User ID: $USER_ID"
 
     # Create PAT
