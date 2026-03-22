@@ -380,8 +380,7 @@ sudo virt-install \
 # GNS3 VIRTUALIZATION
 #=====================
 # Install required packages for using a GNS3 VM
-sudo dnf install -y qt5-qtbase qt5-qtsvg qt5-qtwebsockets libvirt virt-install bridge-utils wireshark ubridge
-pipx install gns3-gui
+sudo dnf install -y qt5-qtbase qt5-qtsvg qt5-qtwebsockets libvirt virt-install bridge-utils wireshark ubridge python3-qt5 python3-qt5-base python3-pyqt5-sip
 pipx inject gns3-gui PyQt6
 # Download the latest VMWare Workstation and Fusion image from https://gns3.com/software/download-vm
 # Extract the files
@@ -411,3 +410,6 @@ sudo virt-install \
   --graphics vnc \
   --video virtio \
   --noautoconsole
+
+# Run GNS3 and setup your remote connection to the VM
+gns3 &
