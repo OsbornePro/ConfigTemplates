@@ -390,7 +390,8 @@ unzip GNS3.VM.VMware.Workstation.2.2.56.1.zip
 rm -rf -- GNS3.VM.VMware.Workstation.2.2.56.1.zip
 # Convert ova file to libvirt preferred file type
 tar -xvf 'GNS3 VM.ova'
-qemu-img convert -f vmdk -O qcow2 GNS3*.vmdk gns3vm.qcow2
+qemu-img convert -f vmdk -O qcow2 GNS3_VM-disk1.vmdk gns3vm-disk1.qcow2
+qemu-img convert -f vmdk -O qcow2 GNS3_VM-disk2.vmdk gns3vm-disk2.qcow2
 sudo chown qemu:qemu gns3vm.qcow2 
 # Clean up uneeded files keeping only gns3vm.qcow2
 rm -rf -- 'GNS3 VM.mf' 'GNS3 VM.ovf' 'GNS3 VM.ova' 
@@ -404,7 +405,8 @@ sudo virt-install \
   --cpu host-passthrough \
   --osinfo linux2022 \
   --import \
-  --disk path=/var/lib/libvirt/iso_storage/gns3vm.qcow2,format=qcow2,bus=virtio \
+  --disk path=/var/lib/libvirt/iso_storage/gns3vm-disk1.qcow2,format=qcow2,bus=virtio \
+  --disk path=/var/lib/libvirt/iso_storage/gns3vm-disk2.qcow2,format=qcow2,bus=virtio \
   --network network=default,model=virtio \
   --graphics vnc \
   --video virtio \
