@@ -381,7 +381,6 @@ sudo virt-install \
 #=====================
 # Install required packages for using a GNS3 VM
 sudo dnf install -y qt5-qtbase qt5-qtsvg qt5-qtwebsockets libvirt virt-install bridge-utils wireshark ubridge python3-qt5 python3-qt5-base python3-pyqt5-sip
-pipx inject gns3-gui PyQt6
 # Download the latest VMWare Workstation and Fusion image from https://gns3.com/software/download-vm
 # Extract the files
 unzip GNS3.VM.VMware.Workstation.2.2.56.1.zip
@@ -391,10 +390,9 @@ rm -rf -- GNS3.VM.VMware.Workstation.2.2.56.1.zip
 tar -xvf 'GNS3 VM.ova'
 qemu-img convert -f vmdk -O qcow2 GNS3_VM-disk1.vmdk gns3vm-disk1.qcow2
 qemu-img convert -f vmdk -O qcow2 GNS3_VM-disk2.vmdk gns3vm-disk2.qcow2
-sudo chown qemu:qemu gns3vm.qcow2 
-# Clean up uneeded files keeping only gns3vm.qcow2
-rm -rf -- 'GNS3 VM.mf' 'GNS3 VM.ovf' 'GNS3 VM.ova' 
-
+# Ensure permissions allow qemu to read the location
+sudo chown qemu:qemu gns3* GNS3*
+# Build the VM
 cd /var/lib/libvirt
 sudo virt-install \
   --connect qemu:///system \
@@ -410,6 +408,18 @@ sudo virt-install \
   --graphics vnc \
   --video virtio \
   --noautoconsole
+
+# Setup your GNS3 GUI tool
+/usr/bin/python3 -m pip install --user gns3-gui==2.2.56.1 gns3-server==2.2.56.1
+/usr/bin/python3 -m pip install --user --upgrade sip PyQt5-sip
+# Verify the modules are there
+/usr/bin/python3 -c "import sip; print('sip ok')"
+/usr/bin/python3 -c "from PyQt5 import QtWidgets; print('PyQt5 ok')"
+# If the packages are not there do
+#mkdir -p ~/.local/lib/python3.9/site-packages
+#cat > ~/.local/lib/python3.9/site-packages/sip.py <<'EOF'
+#from PyQt5.sip import *
+#EOF
 
 # Run GNS3 and setup your remote connection to the VM
 gns3 &
