@@ -138,7 +138,7 @@ sudo chmod 666 /var/lib/libvirt/iso_storage/*
 # Command to create an image though GUI may be recommended
 cd /var/lib/libvirt
 # Make Alma VM from an ISO
-virt-install \
+sudo virt-install \
   --name AlmaLinux10 \
   --ram 2048 \
   --vcpus 2 \
@@ -150,7 +150,7 @@ virt-install \
   --location /var/lib/libvirt/iso_storage/AlmaLinux-10.0-x86_64-dvd.iso
 
 # Make Rocky Linux VM from an ISO
-virt-install \
+sudo virt-install \
   --name RockyLinux \
   --ram 2048 \
   --vcpus 2 \
@@ -162,7 +162,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/Rocky-9.3-x86_64-dvd.iso
 
 # Make RHEL VM from an ISO
-virt-install \
+sudo virt-install \
   --name RHEL9 \
   --ram 2048 \
   --vcpus 2 \
@@ -174,7 +174,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/rhel-9.3-x86_64-dvd.iso
 
 # Make Fedora VM from a live ISO
-virt-install \
+sudo virt-install \
   --name Fedora40 \
   --ram 2048 \
   --vcpus 2 \
@@ -186,7 +186,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/Fedora-Workstation-Live-x86_64-40-1.14.iso
 
 # Make Ubuntu VM from a live ISO
-virt-install \
+sudo virt-install \
   --name Ubuntu24 \
   --ram 3072 \
   --vcpus 2 \
@@ -198,7 +198,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/ubuntu-24.04.2-live-server-amd64.iso
 
 # Make a CentOS VM from a live ISO
-virt-install \
+sudo virt-install \
   --name CentOSStream9 \
   --ram 2048 \
   --vcpus 2 \
@@ -210,7 +210,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/CentOS-Stream-9-latest-x86_64-dvd1.iso
 
 # Make a Zorin VM from an ISO
-virt-install \
+sudo virt-install \
   --name ZorinOS \
   --ram 2048 \
   --vcpus 2 \
@@ -222,7 +222,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/Zorin-OS-16.3-Core-64-bit.iso
 
 # Make Linux Mint VM from a live ISO
-virt-install \
+sudo virt-install \
   --name LinuxMint \
   --ram 2048 \
   --vcpus 2 \
@@ -234,7 +234,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/linuxmint-21.3-cinnamon-64bit.iso
 
 # Make a Pop VM from an ISO
-virt-install \
+sudo virt-install \
   --name PopOS \
   --ram 2048 \
   --vcpus 2 \
@@ -246,7 +246,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/pop-os_22.04_amd64.iso
 
 # Make a Debian VM from an ISO
-virt-install \
+sudo virt-install \
   --name Debian12 \
   --ram 2048 \
   --vcpus 2 \
@@ -258,7 +258,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/debian-12.5.0-amd64-netinst.iso
 
 # Make an MX Linux VM from an ISO
-virt-install \
+sudo virt-install \
   --name MXLinux \
   --ram 2048 \
   --vcpus 2 \
@@ -270,7 +270,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/MX-23.2_x64.iso
 
 # Make Kali VM from a live ISO
-virt-install \
+sudo virt-install \
   --name Kali \
   --ram 2048 \
   --vcpus 2 \
@@ -285,7 +285,7 @@ sudo apt update
 sudo apt install -y spice-vdagent qemu-guest-agent
 
 # Make OpenSUSE VM from a live ISO
-virt-install \
+sudo virt-install \
   --name OpenSUSE \
   --ram 2048 \
   --vcpus 2 \
@@ -297,7 +297,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/openSUSE-Leap-15.5-DVD-x86_64.iso
 
 # Make ArchLinux VM from a live ISO
-virt-install \
+sudo virt-install \
   --name ArchLinux \
   --ram 2048 \
   --vcpus 2 \
@@ -310,7 +310,7 @@ virt-install \
   --boot cdrom,useserial=on
 
 # Make a Manjaro VM from a live ISO
-virt-install \
+sudo virt-install \
   --name Manjaro \
   --ram 2048 \
   --vcpus 2 \
@@ -322,7 +322,7 @@ virt-install \
   --cdrom /var/lib/libvirt/iso_storage/manjaro-kde-24.0.1-minimal.iso
 
 # Make a NixOS from a VM image
-virt-install \
+sudo virt-install \
   --name NixOS \
   --ram 2048 \
   --vcpus 2 \
@@ -348,7 +348,7 @@ virt-install \
 cd /var/lib/libvirt/iso_storage
 wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
 cd ..
-virt-install \
+sudo virt-install \
   --name WinServer2022 \
   --ram 4096 \
   --vcpus 2 \
@@ -364,7 +364,7 @@ virt-install \
 cd /var/lib/libvirt/iso_storage
 wget https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
 cd ..
-virt-install \
+sudo virt-install \
   --name WinServer2025 \
   --ram 4096 \
   --vcpus 2 \
@@ -375,3 +375,37 @@ virt-install \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/WindowsServer2025_x64FRE_en-us.iso \
   --disk path=/var/lib/libvirt/iso_storage/virtio-win.iso,device=cdrom
+
+#=====================
+# GNS3 VIRTUALIZATION
+#=====================
+# Install required packages for using a GNS3 VM
+sudo dnf install -y qt5-qtbase qt5-qtsvg qt5-qtwebsockets libvirt virt-install bridge-utils wireshark ubridge
+pipx install gns3-gui
+pipx inject gns3-gui PyQt6
+# Download the latest VMWare Workstation and Fusion image from https://gns3.com/software/download-vm
+# Extract the files
+unzip GNS3.VM.VMware.Workstation.2.2.56.1.zip
+# Remove compressed file
+rm -rf -- GNS3.VM.VMware.Workstation.2.2.56.1.zip
+# Convert ova file to libvirt preferred file type
+tar -xvf 'GNS3 VM.ova'
+qemu-img convert -f vmdk -O qcow2 GNS3*.vmdk gns3vm.qcow2
+sudo chown qemu:qemu gns3vm.qcow2 
+# Clean up uneeded files keeping only gns3vm.qcow2
+rm -rf -- 'GNS3 VM.mf' 'GNS3 VM.ovf' 'GNS3 VM.ova' 
+
+cd /var/lib/libvirt
+sudo virt-install \
+  --connect qemu:///system \
+  --name GNS3-VM \
+  --memory 8192 \
+  --vcpus 4 \
+  --cpu host-passthrough \
+  --osinfo linux2022 \
+  --import \
+  --disk path=/var/lib/libvirt/iso_storage/gns3vm.qcow2,format=qcow2,bus=virtio \
+  --network network=default,model=virtio \
+  --graphics vnc \
+  --video virtio \
+  --noautoconsole
