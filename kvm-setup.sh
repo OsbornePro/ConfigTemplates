@@ -110,6 +110,7 @@ sudo nmcli connection up br0
 #Connection successfully activated (controller waiting for ports) (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/6)
 
 # Verify it works
+sudo systemctl restart libvirtd
 ping -I br0 1.1.1.1
 #PING 1.1.1.1 (1.1.1.1) from 10.0.0.244 br0: 56(84) bytes of data.
 #64 bytes from 1.1.1.1: icmp_seq=1 ttl=55 time=13.0 ms
