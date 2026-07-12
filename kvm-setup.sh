@@ -270,6 +270,16 @@ sudo virt-install \
   --console pty,target_type=serial \
   --cdrom /var/lib/libvirt/iso_storage/MX-23.2_x64.iso
 
+# Make Kali VM from qemu image
+virt-install \
+  --name Kali \
+  --memory 4096 \
+  --vcpus 2 \
+  --disk path=/mnt/iso_storage/kali-linux-2026.2-qemu-amd64.qcow2,format=qcow2,bus=virtio \
+  --os-variant debian12 \
+  --network bridge=br0,model=virtio \
+  --graphics vnc,listen=0.0.0.0 \
+  --import
 # Make Kali VM from a live ISO
 sudo virt-install \
   --name Kali \
